@@ -1,0 +1,16 @@
+{
+  "name": "MilkBot Donkhouse Poker Bot",
+  "description": "A Poker Bot to Play on Donkhouse",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://donkhouse.com/group/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
