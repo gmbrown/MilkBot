@@ -4,6 +4,13 @@ window.onload=function() {
 
 handStringLogged = ""
 
+fold = function() {
+  console.log("pressing fold hotkey")
+  pressEvent = $.Event("keypress");
+  pressEvent.which = 102;
+  $("#game").trigger(pressEvent);
+};
+
 $(document).ready(function() {
   $("#cht_bx").bind("DOMNodeInserted", function() {
       chatBoxText = $("#cht_bx").text()
@@ -15,11 +22,11 @@ $(document).ready(function() {
         handString = "None"
       }
       else {
-        handString = chatBoxText.substring(handStringIndex + 14, handStringIndex+ 21)
+        handString = chatBoxText.substring(handStringIndex + 14, handStringIndex + 21)
     }
     if (handStringLogged != handString) {
       console.log(handString)
       handStringLogged = handString
     }
- });
+  });
 });
