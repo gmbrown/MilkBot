@@ -1,12 +1,45 @@
 setInterval(checkIfTurnAndPlay, 2500)
 socket.on('distributing pot', checkWhoWonAndMaybeTaunt)
 
+const mb = { // constants
+    BIG_BLIND: game.big_blind/100, // not accounting for someone changing BB mid-game
+    ALL: 'all'
+}
+
+const preFlopHandsToBetMultipliers = {
+    // hand_ranks: [call_to, raise_to]
+    // call_to and raise_to are multipliers of the big blind
+    AA: [mb.ALL, mb.ALL],
+    72: [mb.ALL, mb.ALL],
+    KK: [mb.ALL, mb.ALL],
+    QQ: [mb.ALL, mb.ALL],
+    JJ: [mb.ALL, mb.ALL],
+    TT: [mb.ALL, mb.ALL],
+    99: [mb.ALL, mb.ALL],
+    88: [mb.ALL, mb.ALL],
+    AK: [mb.ALL, mb.ALL],
+    AQ: [mb.ALL, mb.ALL],
+    AJ: [mb.ALL, mb.ALL],
+    KQ: [8, 3],
+    KJ: [8, 3],
+    AT: [8, 3],
+    77: [8, 1],
+    66: [8, 1],
+    55: [8, 1],
+    44: [8, 1],
+    33: [8, 1],
+    22: [8, 1],
+    A9: [8, 1],
+    A8: [8, 1]
+}
+
+
 function checkIfTurnAndPlay () {
     if (!game.action_widget || !game.players[game.client_perspective].cards.card_str) {
         // seems like sometimes action_widget will be truthy but there are no cards... skip
         return
     }
-    playhand(game.players[game.client_perspective].cards.card_str, game.board.card_str)
+    playHand(game.players[game.client_perspective].cards.card_str, game.board.card_str)
 }
 
 function showCardsAtEndOfHand() {
@@ -59,7 +92,7 @@ function goAllIn() {
     game.action_widget.execute_bet_raise()
 }
 
-playhand = function(handString, boardString) {
+playHand = function(handString, boardString) {
     if (game.ruleset_name !== 'NL Texas Holdem') {
         console.log(`Folding/checking because we aren't playing 'NL Texas Holdem'. The game is ${game.ruleset_name}.`)
         fold()
@@ -119,33 +152,51 @@ function cardStringToObj(cardsString) {
 }
 
 function preflop(cardsString) {
-    var cards = cardStringToObj(cardsString)
-    var handRanksString = cards[0].rank + cards[1].rank
+    const [card1, card2] = cardStringToObj(cardsString)
+    const handRanksString = card1.rank + card2.rank
+    const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
+    
+    if (!betMultipliers) {
+        console.log(`My hand is ${cardsString} pre-flop. Folding or checking.`)
+        fold()
+        return
+    }
 
-    // On these hands go all in
-    var allInRanks = ["72", "AA", "KK", "QQ", "JJ", "TT", "99", "88", "AK", "AQ", "AJ"];
-    if (allInRanks.includes(handRanksString)) {
+    const [callToMult, raiseToMult] = betMultipliers;
+    const betInFront = game.action_widget.bet_in_front;
+    const toCall = game.action_widget.to_call / 100;
+    const betSizeIfCall = betInFront + toCall;
+    if (raiseToMult === mb.ALL) {
         console.log(`My hand is ${cardsString} pre-flop. Going all in.`)
         goAllIn()
-        return
-    }
-
-    var preflopBetRanks = ["KQ", "KJ", "AT"];
-    if (preflopBetRanks.includes(handRanksString)) {
-        console.log(`My hand is ${cardsString} pre-flop. Making pot-sized bet.`)
-        makePotSizedBet()
-        return
-    }
-
-    var preflopCallRanks = ["77", "66", "55", "44", "33", "22", "A9", "A8"];
-    if (preflopCallRanks.includes(handRanksString)) {
-        console.log(`My hand is ${cardsString} pre-flop. Calling or checking.`)
+    } else if (betSizeIfCall < raiseToMult * mb.BIG_BLIND) {
+        const betSize = raiseToMult * mb.BIG_BLIND;
+        if (betSize >= game.action_widget.next_legal_raise) {
+            // the bet we want to make is greater than our min bet, so we're good to go
+            console.log(`My hand is ${cardsString} pre-flop. Raising to ${betSize}.`)
+            game.action_widget.update_slider_by_value(betSize);
+            game.action_widget.sizing_input.value = betSize;
+            game.action_widget.execute_bet_raise()
+        } else if (betSizeIfCall <= callToMult * mb.BIG_BLIND) {
+            // we wanted to raise by too small of an amount, so check if our call limit allows calling
+            console.log(`My hand is ${cardsString} pre-flop. I wanted to raise to ${betSize} but ` +
+                `the minimum bet was higher so I'm calling at ${betSizeIfCall}.`)
+            callOrCheck()
+        } else {
+            console.log(`My hand is ${cardsString} pre-flop. I wanted to raise to ${betSize} but ` +
+                `the minimum bet was higher. I could've called at ${betSizeIfCall} but the call ` +
+                `limit for this hand was ${callToMult * mb.BIG_BLIND} so I'm folding.`)
+            fold()
+        }
+    } else if (callToMult === mb.ALL || betSizeIfCall <= callToMult * mb.BIG_BLIND) {
+        console.log(`My hand is ${cardsString} pre-flop. Calling at ${betSizeIfCall}.`)
         callOrCheck()
-        return
-    }
-
-    console.log(`My hand is ${cardsString} pre-flop. Folding or checking.`)
-    fold()
+    } else {
+        console.log(`My hand is ${cardsString} pre-flop. I'd have to bet ${betSizeIfCall} ` +
+            `to call but my raise limit is ${raiseToMult * mb.BIG_BLIND} and call limit is ` +
+            `${callToMult * mb.BIG_BLIND} so I'm folding.`)
+        fold()
+    }  
 }
 
 function postflop(cardsString, boardCardsString) {    
