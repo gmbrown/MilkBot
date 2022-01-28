@@ -154,7 +154,7 @@ function postflop(cardsString, boardCardsString) {
     boardCards.forEach( (card) => {
         suitFreqWithBoard[card.suit] += 1
     })
-    if (Math.max(...Object.values(suitFreqWithBoard) >= 5)) {
+    if (Math.max(...Object.values(suitFreqWithBoard)) >= 5) {
         console.log("we have a flush")
         goAllIn()
         return
