@@ -60,8 +60,6 @@ function cardStringToObj(cardsString) {
         else {
             rank = cardString[0]
         }
-        console.log("rank: " + rank);
-        console.log("suit: " + suit);
         
         ranknum = 0;
         switch(rank) {
