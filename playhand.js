@@ -4,21 +4,31 @@ function checkIfTurnAndPlay () {
     if (!game.action_widget) {
         return
     }
-    playhand(game.players[game.action_widget.seat].cards.card_str)
+    playhand(game.players[game.action_widget.seat].cards.card_str, game.board.card_str)
 }
 
-const fold = () => {
+function fold() {
     if (game.action_widget.to_call === 0) {
-        game.action_widget.execute_check_call()
+        callOrCheck()
     } else {
         game.action_widget.execute_fold()
     }
 }
 
-const goAllIn = () => {
-    game.action_widget.update_sizing_input_by_position(
-        game.action_widget.x_values[game.action_widget.x_values.length - 1]
-    )
+function callOrCheck() {
+    game.action_widget.execute_check_call()
+}
+
+function makePotSizeBet() {
+    const potSizeIfCall = game.action_widget.pot_size - game.action_widget.bet_in_front + game.action_widget.last_bet;
+    game.action_widget.update_slider_by_value(potSizeIfCall + game.action_widget.last_bet);
+    game.action_widget.execute_bet_raise();
+}
+
+function goAllIn() {
+    const numXValues = game.action_widget.x_values.length;
+    const xValueForAllIn = game.action_widget.x_values[numXValues - 1]
+    game.action_widget.update_sizing_input_by_position(xValueForAllIn)
     game.action_widget.execute_bet_raise()
 }
 
