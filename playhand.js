@@ -23,6 +23,11 @@ const goAllIn = () => {
 }
 
 playhand = function(handString) {
+    if (game.ruleset_name !== 'NL Texas Holdem') {
+        console.log(`Folding/checking because we aren't playing 'NL Texas Holdem'. The game is ${game.ruleset_name}.`)
+        fold()
+        return;
+    }
     cards = [];
     handString.split("?").forEach(cardString => {
         if (cardString === "") {
@@ -70,7 +75,7 @@ playhand = function(handString) {
     handRanksString = cards[0].rank + cards[1].rank
 
     // On these hands go all in
-    allInRanks = ["AA", "KK", "QQ", "JJ", "1010", "99", "88", "77", "66", "55", "44", "33", "22", "AK", "AQ", "AJ"]
+    allInRanks = ["72", "AA", "KK", "QQ", "JJ", "1010", "99", "88", "77", "66", "55", "44", "33", "22", "AK", "AQ", "AJ"]
     if (allInRanks.includes(handRanksString)) {
         goAllIn()
     } else {
