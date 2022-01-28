@@ -48,20 +48,20 @@ playhand = function(handString, boardString) {
 }
 
 function cardStringToObj(cardsString) {
-    cards = [];
+    var cards = [];
     cardsString.split("?").forEach(cardString => {
         if (cardString === "") {
             return;
         }
-        suit = cardString[cardString.length - 1];
+        var suit = cardString[cardString.length - 1];
         if (cardString.length > 2) {
-            rank = "10"
+            var rank = "10"
         }
         else {
-            rank = cardString[0]
+            var rank = cardString[0]
         }
         
-        ranknum = 0;
+        var ranknum = 0;
         switch(rank) {
             case 'J':
                 ranknum = 11;
@@ -81,7 +81,7 @@ function cardStringToObj(cardsString) {
         // Rank number should go 0 - 12
         ranknum -= 2;
 
-        card = {
+        var card = {
             'suit': suit,
             'rank': rank,
             'ranknum': ranknum
@@ -93,23 +93,23 @@ function cardStringToObj(cardsString) {
 }
 
 function preflop(cardsString) {
-    cards = cardStringToObj(cardsString)
-    handRanksString = cards[0].rank + cards[1].rank
+    var cards = cardStringToObj(cardsString)
+    var handRanksString = cards[0].rank + cards[1].rank
 
     // On these hands go all in
-    allInRanks = ["72", "AA", "KK", "QQ", "JJ", "1010", "99", "88", "AK", "AQ", "AJ"];
+    var allInRanks = ["72", "AA", "KK", "QQ", "JJ", "1010", "99", "88", "AK", "AQ", "AJ"];
     if (allInRanks.includes(handRanksString)) {
         goAllIn()
         return
     }
 
-    preflopBetRanks = ["KQ", "KJ", "A10"];
+    var preflopBetRanks = ["KQ", "KJ", "A10"];
     if (preflopBetRanks.includes(handRanksString)) {
         makePotSizeBet()
         return
     }
 
-    preflopCallRanks = ["77", "66", "55", "44", "33", "22", "A9", "A8"];
+    var preflopCallRanks = ["77", "66", "55", "44", "33", "22", "A9", "A8"];
     if (preflopCallRanks.includes(handRanksString)) {
         callOrCheck()
         return
@@ -119,8 +119,8 @@ function preflop(cardsString) {
 }
 
 function postflop(cardsString, boardCardsString) {
-    cards = cardStringToObj(cardsString)
-    boardCards = cardStringToObj(boardCardsString)
+    var cards = cardStringToObj(cardsString)
+    var boardCards = cardStringToObj(boardCardsString)
 
     if (cards[0].rank === cards[1].rank) {
         // Pocket pairs
@@ -145,7 +145,7 @@ function postflop(cardsString, boardCardsString) {
     })
 
     // See if we have a flush
-    suitFreqWithBoard = {"d": 0, "h": 0, "c": 0, "s": 0}
+    var suitFreqWithBoard = {"d": 0, "h": 0, "c": 0, "s": 0}
     cards.forEach( (card) => {
         suitFreqWithBoard[card.suit] += 1
     })
