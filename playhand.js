@@ -24,7 +24,10 @@ const goAllIn = () => {
 
 playhand = function(handString) {
     cards = [];
-    for (const cardString in handString.split("?")) {
+    handString.split("?").forEach(cardString => {
+        if (cardString === "") {
+            return;
+        }
         suit = cardString[cardString.length - 1];
         if (cardString.length > 2) {
             rank = "10"
@@ -61,10 +64,10 @@ playhand = function(handString) {
             'ranknum': ranknum
         }
         cards.push(card)
-    }
-    cards.sort((a,b) => (a.ranknum - b.ranknum))
+    })
+    cards.sort((a,b) => (b.ranknum - a.ranknum))
 
-    handRanksString = card[0].rank + card[1].rank
+    handRanksString = cards[0].rank + cards[1].rank
 
     // On these hands go all in
     allInRanks = ["AA", "KK", "QQ", "JJ", "1010", "99", "88", "77", "66", "55", "44", "33", "22", "AK", "AQ", "AJ"]
