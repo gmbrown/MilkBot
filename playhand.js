@@ -45,19 +45,6 @@ playhand = function(handString, boardString) {
     else {
         postflop(handString, boardString)
     }
-
-    handRanksString = cards[0].rank + cards[1].rank
-
-    // On these hands go all in
-    allInRanks = ["72", "AA", "KK", "QQ", "JJ", "1010", "99", "88", "77", "66", "55", "44", "33", "22", "AK", "AQ", "AJ"]
-    if (allInRanks.includes(handRanksString)) {
-        goAllIn()
-    } else {
-        fold()
-    }
-
-    preflopCallRanks = ["77", "66", "55", "44", "33", "22"]
-    if (preflopCallRanks)
 }
 
 function cardStringToObj(cardsString) {
