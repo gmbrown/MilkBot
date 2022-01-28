@@ -1,6 +1,6 @@
 setInterval(checkIfTurnAndPlay, 1000)
 
-const checkIfTurnAndPlay = () => {
+function checkIfTurnAndPlay () {
     if (!game.action_widget) {
         return
     }
@@ -60,7 +60,7 @@ playhand = function(handString) {
             'rank': rank,
             'ranknum': ranknum
         }
-        cards.append(card)
+        cards.push(card)
     }
     cards.sort((a,b) => (a.ranknum - b.ranknum))
 
