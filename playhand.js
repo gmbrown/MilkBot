@@ -99,22 +99,26 @@ function preflop(cardsString) {
     // On these hands go all in
     var allInRanks = ["72", "AA", "KK", "QQ", "JJ", "1010", "99", "88", "AK", "AQ", "AJ"];
     if (allInRanks.includes(handRanksString)) {
+        console.log(`My hand is ${cardsString} pre-flop. Going all in.`)
         goAllIn()
         return
     }
 
     var preflopBetRanks = ["KQ", "KJ", "A10"];
     if (preflopBetRanks.includes(handRanksString)) {
+        console.log(`My hand is ${cardsString} pre-flop. Making pot-sized bet.`)
         makePotSizeBet()
         return
     }
 
     var preflopCallRanks = ["77", "66", "55", "44", "33", "22", "A9", "A8"];
     if (preflopCallRanks.includes(handRanksString)) {
+        console.log(`My hand is ${cardsString} pre-flop. Calling or checking.`)
         callOrCheck()
         return
     }
 
+    console.log(`My hand is ${cardsString} pre-flop. Folding.`)
     fold()
 }
 
@@ -129,6 +133,7 @@ function postflop(cardsString, boardCardsString) {
             if (boardCard.rank === cards[0].rank) {
                 // hit trips
                 console.log("we hit trips")
+                console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Going all in.`)
                 goAllIn()
                 return
             }
@@ -139,6 +144,7 @@ function postflop(cardsString, boardCardsString) {
         if (boardCard.rank === cards[0].rank || boardCard.rank === cards[1].rank) {
             // paired up
             console.log("we hit a pair")
+            console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Making pot-sized bet.`)
             makePotSizeBet()
             return
         } 
@@ -154,6 +160,7 @@ function postflop(cardsString, boardCardsString) {
     })
     if (Math.max(...Object.values(suitFreqWithBoard)) >= 5) {
         console.log("we have a flush")
+        console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Going all in.`)
         goAllIn()
         return
     }
