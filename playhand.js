@@ -261,15 +261,21 @@ function postflop(cardsString, boardCardsString) {
 }
 
 function handleShowdown() {
-    if (game.n_players_in_hand > 1 && game.is_in_showdown) {
+    const seat = game.client_perspective
+    if (game.n_players_in_hand > 1 && game.players[seat].is_sitting_in && !game.players[seat].is_folded) {
         console.log('SHOWDOWN WITH ME IN IT')
-        tauntOpportunity = game.players.some((p, i) => p.is_sitting_in && !p.is_folded && p.chips === 0 && i !== game.client_perspective)
+        tauntOpportunity = Object.entries(game.players).some(([i, player]) => 
+            player.is_sitting_in && !player.is_folded && player.chips === 0 && i !== seat
+        )
+        console.log('tauntOpportunity', tauntOpportunity)
     }
 }
 
 function handlePotDistribution(potData) {
     const seat = game.client_perspective;
-    if (tauntOpportunity && potData.winners[seat] && potData.winners.length === 1) {
+    if (tauntOpportunity && potData.winners[seat] && Object.keys(potData.winners).length === 1) {
+        // TODO will taunt before animations finish. eventually, add a delay or wait for some event
+        // indicating animations are done
         console.log('Taunting because I knocked someone out!')
         socket.emit('taunt', {taunt: 16, id: game.table_id, group_id: game.group_id})
     }
