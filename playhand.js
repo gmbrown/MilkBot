@@ -86,6 +86,11 @@ function makePotSizedBet() {
 }
 
 function goAllIn() {
+    if (!game.action_widget.bet_button && !game.action_widget.raise_button) {
+        console.log("Wanted to go all in, but it looks like there's no bet or raise button, so I'll call")
+        callOrCheck()
+        return;
+    }
     const numXValues = game.action_widget.x_values.length;
     const xValueForAllIn = game.action_widget.x_values[numXValues - 1]
     game.action_widget.update_sizing_input_by_position(xValueForAllIn)
