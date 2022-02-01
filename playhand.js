@@ -1,5 +1,7 @@
 setInterval(checkIfTurnAndPlay, 2500)
-socket.on('distributing pot', checkWhoWonAndMaybeTaunt)
+socket.on('is in showdown', handleShowdown)
+socket.on('distributing pot', handlePotDistribution)
+let tauntOpportunity = false; // set to true if I'm in a showdown and someone else is all-in
 
 const mb = { // constants
     BIG_BLIND: game.big_blind/100, // not accounting for someone changing BB mid-game
@@ -71,6 +73,7 @@ function makePotSizedBet() {
         game.action_widget.execute_bet_raise();
     } catch (e) {
         console.error(e); // probably this will only throw if there is no option to raise
+        // TODO if someone else went all in, you can't raise. Doesn't mean we should go all in though.
         console.log(`Expecting bet_button to be falsy and it is: ${game.action_widget.bet_button}`)
         console.log(`Expecting raise_button to be falsy and it is: ${game.action_widget.raise_button}`)
         if (game.action_widget.all_in) {
@@ -257,7 +260,18 @@ function postflop(cardsString, boardCardsString) {
     fold()
 }
 
-function checkWhoWonAndMaybeTaunt(potData) {
-    console.dir(potData)
-    console.dir(game.players)
+function handleShowdown() {
+    if (game.n_players_in_hand > 1 && game.is_in_showdown) {
+        console.log('SHOWDOWN WITH ME IN IT')
+        tauntOpportunity = game.players.some((p, i) => p.is_sitting_in && !p.is_folded && p.chips === 0 && i !== game.client_perspective)
+    }
+}
+
+function handlePotDistribution(potData) {
+    const seat = game.client_perspective;
+    if (tauntOpportunity && potData.winners[seat] && potData.winners.length === 1) {
+        console.log('Taunting because I knocked someone out!')
+        socket.emit('taunt', {taunt: 16, id: game.table_id, group_id: game.group_id})
+    }
+    tauntOpportunity = false
 }
