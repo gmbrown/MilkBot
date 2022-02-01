@@ -258,19 +258,6 @@ function postflop(cardsString, boardCardsString) {
 }
 
 function checkWhoWonAndMaybeTaunt(potData) {
-    const seat = game.client_perspective;
-    if (potData.winners.length > 1 || !potData.winners[seat]) {
-        // either there is more than one winner or someone other than the bot won. do nothing
-        return;
-    }
-    const knockedSomeoneOut = Object.keys(potData.stack_consistency_check)
-        .some(key => key !== seat && potData.stack_consistency_check[key] === 0)
-    // TODO if someone was knocked out a while ago would they show up here?
-    // or does it only include people from that hand?
-
-    if (knockedSomeoneOut) {
-        console.log(`I think I knocked someone out. Btw my seat number is ${seat}. Pot data:`)
-        console.dir(potData)
-        socket.emit('taunt', {taunt: 16, id: game.table_id, group_id: game.group_id})
-    }
+    console.dir(potData)
+    console.dir(game.players)
 }
