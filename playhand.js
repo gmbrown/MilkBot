@@ -29,15 +29,16 @@ const preFlopHandsToBetMultipliers = {
     99: [10, 3],
     88: [10, 3],
     AK: [mb.ALL, 10],
-    AQ: [20, 10],
-    AJ: [20, 10],
+    AQ: [30, 10],
+    AJ: [30, 10],
     KQ: [8, 3],
     KJ: [8, 3],
+    KT: [3, 1],
     AT: [8, 3],
     KT: [3, 3],
     QT: [3, 3],
-    JT: [3, 3],
-    T9: [3, 3],
+    JT: [3, 1],
+    T9: [3, 1],
     77: [8, 1],
     66: [8, 1],
     55: [8, 1],
@@ -188,6 +189,8 @@ function preflop(cardsString) {
     const [card1, card2] = cardStringToObj(cardsString)
     const handRanksString = card1.rank + card2.rank
     const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
+
+    // TODO: multipliers for suited starting hands
     
     if (!betMultipliers) {
         console.log('Checking or folding.')
@@ -206,6 +209,10 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     myhand = myPokerHand(cards, boardCards)
     usedHoleCards = getHoleCardsUsed(cards, boardCards)
 
+    // Deal with 4 of a kind
+
+    // add in some logic for draws
+
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
         // TODO: for full house check if my pocket pair is used for the 3 of a kind part
@@ -218,10 +225,11 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         } else if (cards[0].ranknum > 9) {
             console.log("Even though our pocket pair isn't the top pair it's still high")
             makeBetUsingMultipliers(5, 0)
+        } else {
+            // TODO: technically we could have a flush using one hole card and maybe not want to fold.
+            console.log("Our pocket pair seems weak, check/folding")
+            checkOrFold()
         }
-        // TODO: technically we could have a flush using one hole card and maybe not want to fold.
-        console.log("Our pocket pair seems weak, check/folding")
-        checkOrFold()
         return
     }
 
