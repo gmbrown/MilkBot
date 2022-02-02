@@ -289,7 +289,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 makeBetUsingMultipliers(30, 10)
             }
             return
-        } else if (usedHoleCards[0].ranknum === boardCardRankNumDecending[1]) {
+        } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
             console.log("we have second pair")
             if (boardCards.length === 3) {
                 makeBetUsingMultipliers(5, 1)
