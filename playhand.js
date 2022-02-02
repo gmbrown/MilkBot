@@ -41,7 +41,11 @@ function checkIfTurnAndPlay () {
         // seems like sometimes action_widget will be truthy but there are no cards... skip
         return
     }
-    playHand(game.players[game.client_perspective].cards.card_str, game.board.card_str)
+    const holeCards = game.players[game.client_perspective].cards.card_str;
+    const boardCards = game.board.card_str;
+    const boardCardsLogMsg = boardCards ? ` and the board shows ${boardCards}.` : '.';
+    console.log(`My hole cards are ${holeCards}${boardCardsLogMsg}`)
+    playHand(holeCards, boardCards)
 }
 
 function showCardsAtEndOfHand() {
@@ -122,7 +126,7 @@ function goAllIn() {
     makeBetOfSize(betSizeIfAllIn, betSizeIfAllIn);
 }
 
-playHand = function(handString, boardString) {
+function playHand(handString, boardString) {
     if (game.ruleset_name !== 'NL Texas Holdem') {
         console.log(`Folding/checking because we aren't playing 'NL Texas Holdem'. The game is ${game.ruleset_name}.`)
         checkOrFold()
@@ -187,7 +191,7 @@ function preflop(cardsString) {
     const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
     
     if (!betMultipliers) {
-        console.log(`My hand is ${cardsString} pre-flop. Folding or checking.`)
+        console.log('Checking or folding.')
         checkOrFold()
         return
     }
@@ -216,11 +220,10 @@ function postflop(cardsString, boardCardsString) {
         boardCards.forEach((boardCard) => {
             if (boardCard.rank === cards[0].rank) {
                 hitTrips = true
-                console.log("we hit trips")
             }
         });
         if (hitTrips) {
-            console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Going all in.`)
+            console.log('Going all in.')
             goAllIn()
             return
         }
@@ -230,11 +233,10 @@ function postflop(cardsString, boardCardsString) {
     boardCards.forEach((boardCard) => {
         if (boardCard.rank === cards[0].rank || boardCard.rank === cards[1].rank) {
             hitPair = true;
-            console.log("we hit a pair")
         } 
     })
     if (hitPair) {
-        console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Making pot-sized bet.`)
+        console.log('Making pot-sized bet.')
         makePotSizedBet()
         return
     }
@@ -249,12 +251,12 @@ function postflop(cardsString, boardCardsString) {
     })
     if (Math.max(...Object.values(suitFreqWithBoard)) >= 5) {
         console.log("we have a flush")
-        console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Going all in.`)
+        console.log('Going all in.')
         goAllIn()
         return
     }
     
-    console.log(`My hand is ${cardsString} and the board shows ${boardCardsString}. Folding or checking.`)
+    console.log('Checking or folding.')
     checkOrFold()
 }
 
@@ -262,8 +264,9 @@ function handleShowdown() {
     const seat = game.client_perspective
     if (game.n_players_in_hand > 1 && game.players[seat].is_sitting_in && !game.players[seat].is_folded) {
         console.log('SHOWDOWN WITH ME IN IT')
+        console.log('# players in showdown:', game.n_players_in_hand)
         tauntOpportunity = Object.entries(game.players).some(([i, player]) => 
-            player.is_sitting_in && !player.is_folded && player.chips === 0 && i !== seat
+            player.is_sitting_in && !player.is_folded && player.chips === 0 && i !== seat + ''
         )
         console.log('tauntOpportunity', tauntOpportunity)
     }
