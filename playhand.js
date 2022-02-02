@@ -36,7 +36,7 @@ const preFlopHandsToBetMultipliers = {
 }
 
 
-function checkIfTurnAndPlay () {
+async function checkIfTurnAndPlay () {
     if (!game.action_widget || !game.players[game.client_perspective].cards.card_str) {
         // seems like sometimes action_widget will be truthy but there are no cards... skip
         return
