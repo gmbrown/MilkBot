@@ -5,7 +5,16 @@ let tauntOpportunity = false; // set to true if I'm in a showdown and someone el
 
 const mb = { // constants
     BIG_BLIND: game.big_blind/100, // not accounting for someone changing BB mid-game
-    ALL: 'all'
+    ALL: 'all',
+    HIGH_CARD: 'HIGH CARD',
+    PAIR: 'PAIR',
+    TWO_PAIR: 'TWO PAIR',
+    THREE_OF_A_KIND: 'THREE OF A KIND',
+    STRAIGHT: 'STRAIGHT',
+    FLUSH: 'FLUSH',
+    FULL_HOUSE: 'FULL HOUSE',
+    FOUR_OF_A_KIND: 'FOUR OF A KIND',
+    STRAIGHT_FLUSH: 'STRAIGHT FLUSH'
 }
 
 const preFlopHandsToBetMultipliers = {
@@ -15,16 +24,20 @@ const preFlopHandsToBetMultipliers = {
     72: [mb.ALL, mb.ALL],
     KK: [mb.ALL, mb.ALL],
     QQ: [mb.ALL, mb.ALL],
-    JJ: [mb.ALL, mb.ALL],
-    TT: [mb.ALL, mb.ALL],
-    99: [mb.ALL, mb.ALL],
-    88: [mb.ALL, mb.ALL],
-    AK: [mb.ALL, mb.ALL],
-    AQ: [mb.ALL, mb.ALL],
-    AJ: [mb.ALL, mb.ALL],
+    JJ: [mb.ALL, 6],
+    TT: [mb.ALL, 5],
+    99: [10, 3],
+    88: [10, 3],
+    AK: [mb.ALL, 10],
+    AQ: [20, 10],
+    AJ: [20, 10],
     KQ: [8, 3],
     KJ: [8, 3],
     AT: [8, 3],
+    KT: [3, 3],
+    QT: [3, 3],
+    JT: [3, 3],
+    T9: [3, 3],
     77: [8, 1],
     66: [8, 1],
     55: [8, 1],
@@ -95,30 +108,11 @@ function makeBetOfSize(callToLimit, raiseToLimit) { // TODO later on, take in in
     }
 }
 
-function makePotSizedBet() {
-    const minIndex = game.action_widget.threshold_tags.indexOf('min');
-    const potThresholdIndex = game.action_widget.threshold_tags.indexOf('pot') - minIndex;
-    const numXValues = game.action_widget.x_values.length;
-    const shouldUseAllInXValue = potThresholdIndex === -1 || potThresholdIndex + 1 > numXValues
-    const xValueIndex = shouldUseAllInXValue ? numXValues - 1 : potThresholdIndex
-    try {
-        game.action_widget.update_sizing_input_by_position(game.action_widget.x_values[xValueIndex])
-        game.action_widget.execute_bet_raise();
-    } catch (e) {
-        console.error(e); // probably this will only throw if there is no option to raise
-        // TODO if someone else went all in, you can't raise. Doesn't mean we should go all in though.
-        console.log(`Expecting bet_button to be falsy and it is: ${game.action_widget.bet_button}`)
-        console.log(`Expecting raise_button to be falsy and it is: ${game.action_widget.raise_button}`)
-        if (game.action_widget.all_in) {
-            console.log('Seems like the all-in button is visible. Going all in.')
-            game.action_widget.all_in.execute()
-        } else if (game.action_widget.call_button) {
-            console.log('Seems like the call button is visible, but not all-in. Calling.')
-            game.action_widget.call_button.execute()
-        } else {
-            console.error('Not sure what to do. HELP.')
-        }
-    }
+function makeBetUsingMultipliers(callToMult, raiseToMult) {
+    const betSizeIfAllIn = game.action_widget.stack_size + game.action_widget.bet_in_front;
+    const callToLimit = callToMult === mb.ALL ? betSizeIfAllIn : callToMult * mb.BIG_BLIND;
+    const raiseToLimit = raiseToMult === mb.ALL ? betSizeIfAllIn : raiseToMult * mb.BIG_BLIND;
+    makeBetOfSize(callToLimit, raiseToLimit);
 }
 
 function goAllIn() {
@@ -198,67 +192,116 @@ function preflop(cardsString) {
     }
 
     const [callToMult, raiseToMult] = betMultipliers;
-    const betSizeIfAllIn = game.action_widget.stack_size + game.action_widget.bet_in_front;
-    const callToLimit = callToMult === mb.ALL ? betSizeIfAllIn : callToMult * mb.BIG_BLIND;
-    const raiseToLimit = raiseToMult === mb.ALL ? betSizeIfAllIn : raiseToMult * mb.BIG_BLIND;
-    makeBetOfSize(callToLimit, raiseToLimit);
+    makeBetUsingMultipliers(callToMult, raiseToMult)
 }
 
-function postflopNew(cardsString, boardCardsString, playersInHand, potSizeAtStartOfRound) {
-    // pass
-}
-
-function postflop(cardsString, boardCardsString) {    
+function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOfRound) {
     var cards = cardStringToObj(cardsString)
     var boardCards = cardStringToObj(boardCardsString)
 
-    console.log(myPokerHand(cards, boardCards))
+    myhand = myPokerHand(cards, boardCards)
+    usedHoleCards = getHoleCardsUsed(cards, boardCards)
 
+    // pocket pairs
     if (cards[0].rank === cards[1].rank) {
-        // Pocket pairs
-        // Will go all in with trips or fold
-        var hitTrips = false;
-        boardCards.forEach((boardCard) => {
-            if (boardCard.rank === cards[0].rank) {
-                hitTrips = true
+        // TODO: for full house check if my pocket pair is used for the 3 of a kind part
+        if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE, mb.FOUR_OF_A_KIND].includes(myhand) && usedHoleCards.length === 2) {
+            console.log("Our pocket pair hit something!")
+            makeBetUsingMultipliers(mb.ALL, 3 * boardCards.length)
+        } else if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+            console.log("Our pocket pair is top pair!")
+            makeBetUsingMultipliers(mb.ALL, 5)
+        } else if (cards[0].ranknum > 9) {
+            console.log("Even though our pocket pair isn't the top pair it's still high")
+            makeBetUsingMultipliers(5, 0)
+        }
+        // TODO: technically we could have a flush using one hole card and maybe not want to fold.
+        console.log("Our pocket pair seems weak, check/folding")
+        checkOrFold()
+        return
+    }
+
+    // full houses
+    if (myhand === mb.FULL_HOUSE && usedHoleCards.length > 0) {
+        console.log("we have a full house and it's not on the board")
+        makeBetUsingMultipliers(mb.ALL, 8)
+        return
+    }
+
+    // flushes
+    if (myhand === mb.FLUSH) {
+        if (usedHoleCards.length === 2) {
+            console.log("we have a flush using both our hole cards")
+            makeBetUsingMultipliers(mb.ALL, 7)
+        } else if (usedHoleCards.length === 1) {
+            // TODO: it matters what card we have
+            console.log("we have a flush using only 1 hole card")
+            makeBetUsingMultipliers(5, 0)
+        }
+        // TODO: we might beat the board!
+        console.log("flush on the board")
+        checkOrFold()
+        return
+    }
+
+    // straights
+    if (myhand === mb.STRAIGHT) {
+        if (usedHoleCards.length === 2) {
+            // TODO: see if there is 4 to a flush
+            console.log("we have a straight using both our hole cards")
+            makeBetUsingMultipliers(mb.ALL, 7)
+        } else if (usedHoleCards.length === 1) {
+            console.log("we have a straight using only 1 hole card")
+            makeBetUsingMultipliers(15, 3)
+        }
+        // TODO: we might beat the board!
+        console.log("straight on the board")
+        checkOrFold()
+        return
+    }
+
+    // trips (only using one card in hand)
+    if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
+        // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
+        console.log("We have 3 of a kind using 1 hole card")
+        makeBetUsingMultipliers(25, 3 * boardCards.length)
+        return
+    }
+
+    // two pair (using both) (and not pocket pair)
+    if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
+        // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
+        console.log("We have two pair using both hole cards")
+        makeBetUsingMultipliers(25, 2 * boardCards.length)
+        return
+    }
+
+    // pair (possible 2 pair with one pair on the board)
+    if ([mb.PAIR, mb.TWO_PAIR].includes(myhand) && usedHoleCards.length == 1) {
+        boardCardRankNumDecending = boardCards.map(c => c.ranknum).sort().reverse()
+        if (usedHoleCards[0].ranknum === boardCardRankNumDecending[0]) {
+            console.log("We have top pair")
+            if (boardCards.length === 3) {
+                makeBetUsingMultipliers(10, 3)
+            } else if (boardCards.length === 4) {
+                makeBetUsingMultipliers(20, 0)
+            } else {
+                makeBetUsingMultipliers(30, 10)
             }
-        });
-        if (hitTrips) {
-            console.log('Going all in.')
-            goAllIn()
+            return
+        } else if (usedHoleCards[0].ranknum === boardCardRankNumDecending[1]) {
+            console.log("we have second pair")
+            if (boardCards.length === 3) {
+                makeBetUsingMultipliers(5, 1)
+            } else {
+                makeBetUsingMultipliers(5, 0)
+            }
             return
         }
-    }
-
-    var hitPair = false
-    boardCards.forEach((boardCard) => {
-        if (boardCard.rank === cards[0].rank || boardCard.rank === cards[1].rank) {
-            hitPair = true;
-        } 
-    })
-    if (hitPair) {
-        console.log('Making pot-sized bet.')
-        makePotSizedBet()
+        makeBetUsingMultipliers(3, 0)
         return
     }
 
-    // See if we have a flush
-    var suitFreqWithBoard = {"D": 0, "H": 0, "C": 0, "S": 0}
-    cards.forEach( (card) => {
-        suitFreqWithBoard[card.suit] += 1
-    })
-    boardCards.forEach( (card) => {
-        suitFreqWithBoard[card.suit] += 1
-    })
-    if (Math.max(...Object.values(suitFreqWithBoard)) >= 5) {
-        console.log("we have a flush")
-        console.log('Going all in.')
-        goAllIn()
-        return
-    }
-    
-    console.log('Checking or folding.')
-    checkOrFold()
 }
 
 function handleShowdown() {
@@ -282,6 +325,25 @@ function handlePotDistribution(potData) {
         socket.emit('taunt', {taunt: 16, id: game.table_id, group_id: game.group_id})
     }
     tauntOpportunity = false
+}
+
+function getHoleCardsUsed(handCards, boardCards) { // TODO rename function
+    const withBoth = myPokerHand(handCards, boardCards);
+    const noHoleCards = myPokerHand([], boardCards);
+    if (withBoth === noHoleCards) {
+        return []
+    }
+    const [withFirst, withSecond] = holeCards.map(holeCard => myPokerHand([holeCard], boardCards))
+    if (withFirst === withBoth && withSecond === withBoth) {
+        // either card gets you just as good a hand as with both of them. return the one with higher rank
+        return holeCards[0].rankNum > holeCards[1].rankNum ? [holeCards[0]] : [holeCards[1]]
+    } else if (withBoth === withFirst) {
+        return [holeCards[0]]
+    } else if (withBoth === withSecond) {
+        return [holeCards[1]]
+    } else {
+        return holeCards
+    }
 }
 
 function myPokerHand(handCards, boardCards) {
@@ -313,18 +375,18 @@ function myPokerHand(handCards, boardCards) {
 
     // Check 4 of a kind
     if (highestCount === 4) {
-        return "FOUR OF A KIND";
+        return mb.FOUR_OF_A_KIND;
     }
 
     // Check full house
     if (highestCount === 3 && secondHighestCount >= 2) {
-        return "FULL HOUSE"
+        return mb.FULL_HOUSE;
     }
 
     // Check flush
     const maxOfOneSuit = Math.max(...Object.values(suitToCount))
     if (maxOfOneSuit >= 5) {
-        return "FLUSH"
+        return mb.FLUSH;
     }
 
     // Check straight
@@ -337,24 +399,24 @@ function myPokerHand(handCards, boardCards) {
     for (i = 0; i <= uniqueRanksInOrder.length - 5; i++) {
         subStringToCheck = uniqueRanksInOrder.slice(i, i + 5)
         if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
-            return "STRAIGHT"
+            return mb.STRAIGHT;
         }
     }
 
     // Check 3 of a kind
     if (highestCount === 3) {
-        return "THREE OF A KIND"
+        return mb.THREE_OF_A_KIND;
     }
 
     // Check 2 pair
     if (highestCount === 2 && secondHighestCount === 2) {
-        return "TWO PAIR"
+        return mb.TWO_PAIR;
     }
 
     // Check pair
     if (highestCount === 2) {
-        return "PAIR"
+        return mb.PAIR;
     }
 
-    return "HIGH CARD"
+    return mb.HIGH_CARD;
 }
