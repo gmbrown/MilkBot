@@ -278,8 +278,8 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // pair (possible 2 pair with one pair on the board)
     if ([mb.PAIR, mb.TWO_PAIR].includes(myhand) && usedHoleCards.length == 1) {
-        boardCardRankNumDecending = boardCards.map(c => c.ranknum).sort().reverse()
-        if (usedHoleCards[0].ranknum === boardCardRankNumDecending[0]) {
+        boardCardRankNumDescending = boardCards.map(c => c.ranknum).sort((a, b) => b - a)
+        if (usedHoleCards[0].ranknum === boardCardRankNumDescending[0]) {
             console.log("We have top pair")
             if (boardCards.length === 3) {
                 makeBetUsingMultipliers(10, 3)
@@ -298,6 +298,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
             }
             return
         }
+        console.log("we have a pair, but it's low")
         makeBetUsingMultipliers(3, 0)
         return
     }
