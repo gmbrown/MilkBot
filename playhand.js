@@ -127,7 +127,11 @@ function playHand(handString, boardString) {
         checkOrFold()
         return;
     }
-    showCardsAtEndOfHand()
+    try {
+        showCardsAtEndOfHand()
+    } catch (e) {
+        // we don't really care
+    }
 
     if (boardString === "") {
         preflop(handString)
