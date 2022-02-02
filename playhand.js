@@ -41,6 +41,7 @@ function checkIfTurnAndPlay () {
         // seems like sometimes action_widget will be truthy but there are no cards... skip
         return
     }
+    await new Promise(resolve => setTimeout(resolve, 1000));
     const holeCards = game.players[game.client_perspective].cards.card_str;
     const boardCards = game.board.card_str;
     const boardCardsLogMsg = boardCards ? ` and the board shows ${boardCards}.` : '.';
