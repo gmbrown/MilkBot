@@ -327,8 +327,8 @@ function handlePotDistribution(potData) {
     tauntOpportunity = false
 }
 
-function getHoleCardsUsed(handCards, boardCards) { // TODO rename function
-    const withBoth = myPokerHand(handCards, boardCards);
+function getHoleCardsUsed(holeCards, boardCards) { // TODO rename function
+    const withBoth = myPokerHand(holeCards, boardCards);
     const noHoleCards = myPokerHand([], boardCards);
     if (withBoth === noHoleCards) {
         return []
