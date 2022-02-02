@@ -207,9 +207,15 @@ function preflop(cardsString) {
     }  
 }
 
+function postflopNew(cardsString, boardCardsString, playersInHand, potSizeAtStartOfRound) {
+    // pass
+}
+
 function postflop(cardsString, boardCardsString) {    
     var cards = cardStringToObj(cardsString)
     var boardCards = cardStringToObj(boardCardsString)
+
+    console.log(myPokerHand(cards, boardCards))
 
     if (cards[0].rank === cards[1].rank) {
         // Pocket pairs
@@ -280,4 +286,79 @@ function handlePotDistribution(potData) {
         socket.emit('taunt', {taunt: 16, id: game.table_id, group_id: game.group_id})
     }
     tauntOpportunity = false
+}
+
+function myPokerHand(handCards, boardCards) {
+    const rankToCount = {};
+    const suitToCount = {};
+    const allCards = handCards.concat(boardCards);
+    allCards.forEach(card => {
+        const currentRankCount = rankToCount[card.rank] || 0;
+        rankToCount[card.rank] = currentRankCount + 1;
+
+        const currentSuitCount = suitToCount[card.suit] || 0;
+        suitToCount[card.suit] = currentSuitCount + 1;
+    });
+
+    let highestCount = 0
+    let secondHighestCount = 0
+    Object.entries(rankToCount).forEach(([rank, count]) => {
+        if (count > highestCount) {
+            secondHighestCount = highestCount
+            highestCount = count
+        }
+        else if (count > secondHighestCount) {
+            secondHighestCount = count
+        }
+    });
+
+    // Check straight flush
+    // will do this later
+
+    // Check 4 of a kind
+    if (highestCount === 4) {
+        return "FOUR OF A KIND";
+    }
+
+    // Check full house
+    if (highestCount === 3 && secondHighestCount >= 2) {
+        return "FULL HOUSE"
+    }
+
+    // Check flush
+    const maxOfOneSuit = Math.max(...Object.values(suitToCount))
+    if (maxOfOneSuit >= 5) {
+        return "FLUSH"
+    }
+
+    // Check straight
+    const sortedRanks = allCards.sort((a, b) => a.ranknum - b.ranknum).map(c => c.rank)
+    let uniqueRanksInOrder = [... new Set(sortedRanks)].join('')
+    if (uniqueRanksInOrder.endsWith("A")) {
+        uniqueRanksInOrder = "A" + uniqueRanksInOrder
+    }
+
+    for (i = 0; i <= uniqueRanksInOrder.length - 5; i++) {
+        subStringToCheck = uniqueRanksInOrder.slice(i, i + 5)
+        if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
+            return "STRAIGHT"
+        }
+    }
+
+    // Check 3 of a kind
+    if (highestCount === 3) {
+        return "THREE OF A KIND"
+    }
+
+    // Check 2 pair
+    if (highestCount === 2 && secondHighestCount === 2) {
+        return "TWO PAIR"
+    }
+
+    // Check pair
+    if (highestCount === 2) {
+        return "PAIR"
+    }
+
+    return "HIGH CARD"
 }
