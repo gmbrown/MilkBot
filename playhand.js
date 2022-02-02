@@ -302,6 +302,8 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         return
     }
 
+    console.log("Doesn't look like I have anything interesting. check/folding")
+    checkOrFold()
 }
 
 function handleShowdown() {
@@ -327,7 +329,7 @@ function handlePotDistribution(potData) {
     tauntOpportunity = false
 }
 
-function getHoleCardsUsed(holeCards, boardCards) { // TODO rename function
+function getHoleCardsUsed(holeCards, boardCards) {
     const withBoth = myPokerHand(holeCards, boardCards);
     const noHoleCards = myPokerHand([], boardCards);
     if (withBoth === noHoleCards) {
