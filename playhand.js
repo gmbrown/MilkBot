@@ -209,14 +209,18 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     myhand = myPokerHand(cards, boardCards)
     usedHoleCards = getHoleCardsUsed(cards, boardCards)
 
-    // Deal with 4 of a kind
+    if (myhand === mb.FOUR_OF_A_KIND && usedHoleCards.length > 0) {
+        console.log("Holy smokes! Four of a kind!")
+        makeBetUsingMultipliers(mb.ALL, 4 * boardCards.length)
+        return
+    }
 
     // add in some logic for draws
 
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
         // TODO: for full house check if my pocket pair is used for the 3 of a kind part
-        if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE, mb.FOUR_OF_A_KIND].includes(myhand) && usedHoleCards.length === 2) {
+        if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE].includes(myhand) && usedHoleCards.length === 2) {
             console.log("Our pocket pair hit something!")
             makeBetUsingMultipliers(mb.ALL, 3 * boardCards.length)
         } else if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
