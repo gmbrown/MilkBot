@@ -305,7 +305,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
             makeBetUsingMultipliers(mb.ALL, 7)
         } else if (usedHoleCards.length === 1) {
             console.log("we have a straight using only 1 hole card")
-            makeBetUsingMultipliers(15, 3)
+            makeBetUsingMultipliers(25, 3)
         }
         // TODO: we might beat the board!
         console.log("straight on the board")
@@ -357,8 +357,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // Flush Draw
-    const flushDraw = hasFlushDraw(holeCards, boardCards)
-    if (flushDraw) {
+    if (hasFlushDraw(holeCards, boardCards)) {
         console.log("we have 4 to the flush using both hole cards")
         if (boardCards.length === 3) {
             makeBetUsingMultipliers(10, 10)
@@ -368,6 +367,20 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
             return
         } else {
             console.log("flush draw is worthless with all the cards out already")
+        }
+    }
+
+    // Open ended straight draw
+    if (hasStraightDraw(holeCards, boardCards) && !hasStraightDraw([], boardCards)) {
+        console.log("we have an open ended straight draw using at least 1 hole card")
+        if (boardCards.length === 3) {
+            makeBetUsingMultipliers(10, 10)
+            return
+        } else if (boardCards.length === 4) {
+            makeBetUsingMultipliers(5, 5)
+            return
+        } else {
+            console.log("straight draw is worthless with all the cards out already")
         }
     }
 
@@ -490,6 +503,25 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
+}
+
+// For now only considering open ended straight draws
+// Will call this once with and without hand cards to know if we use them
+function hasStraightDraw(handCards, boardCards) {
+    const allCards = handCards.concat(boardCards);
+    const sortedRanks = allCards.sort((a, b) => a.ranknum - b.ranknum).map(c => c.rank)
+    let uniqueRanksInOrder = [... new Set(sortedRanks)].join('')
+    if (uniqueRanksInOrder.endsWith("A")) {
+        uniqueRanksInOrder = "A" + uniqueRanksInOrder
+    }
+
+    for (i = 0; i <= uniqueRanksInOrder.length - 4; i++) {
+        subStringToCheck = uniqueRanksInOrder.slice(i, i + 4)
+        if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
+            return true
+        }
+    }
+    return false
 }
 
 // For now we are only considering flush draws that use both hole cards
