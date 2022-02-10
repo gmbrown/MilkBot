@@ -49,6 +49,35 @@ const preFlopHandsToBetMultipliers = {
     A8: [8, 1]
 }
 
+const suitedPreFlopHandsToBetMultipliers = {
+    AK: [mb.ALL, mb.ALL],
+    AQ: [mb.ALL, mb.ALL],
+    AJ: [30, 20],
+    AT: [10, 10],
+    A9: [10, 3],
+    A8: [8, 3],
+    A7: [6, 1],
+    A6: [6, 1],
+    A5: [8, 3],
+    A4: [5, 1],
+    A3: [5, 1],
+    A2: [5, 1],
+    KQ: [10, 5],
+    K9: [6, 2],
+    K8: [3, 1],
+    QJ: [8, 5],
+    Q9: [3, 1],
+    JT: [8, 5],
+    J9: [3, 1],
+    T9: [6, 2],
+    98: [6, 1],
+    87: [5, 1],
+    76: [5, 1],
+    65: [5, 1],
+    54: [3, 1],
+    43: [3, 1],
+    32: [3, 1]
+}
 
 async function checkIfTurnAndPlay () {
     if (!game.action_widget || !game.players[game.client_perspective].cards.card_str) {
@@ -188,10 +217,18 @@ function cardStringToObj(cardsString) {
 function preflop(cardsString) {
     const [card1, card2] = cardStringToObj(cardsString)
     const handRanksString = card1.rank + card2.rank
-    const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
 
-    // TODO: multipliers for suited starting hands
-    
+    if (card1.suit === card2.suit) {
+        const suitedBetMultipliers = suitedPreFlopHandsToBetMultipliers(handRanksString)
+        if (suitedBetMultipliers) {
+            console.log("Preflop cards are suited, and match one of the suited starting hands")
+            const [callToMult, raiseToMult] = suitedBetMultipliers;
+            makeBetUsingMultipliers(callToMult, raiseToMult)
+            return
+        }
+    }
+
+    const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
     if (!betMultipliers) {
         console.log('Checking or folding.')
         checkOrFold()
@@ -319,6 +356,21 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         return
     }
 
+    // Flush Draw
+    const flushDraw = hasFlushDraw(holeCards, boardCards)
+    if (flushDraw) {
+        console.log("we have 4 to the flush using both hole cards")
+        if (boardCards.length === 3) {
+            makeBetUsingMultipliers(10, 10)
+            return
+        } else if (boardCards.length === 4) {
+            makeBetUsingMultipliers(5, 5)
+            return
+        } else {
+            console.log("flush draw is worthless with all the cards out already")
+        }
+    }
+
     console.log("Doesn't look like I have anything interesting. check/folding")
     checkOrFold()
 }
@@ -438,4 +490,22 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
+}
+
+// For now we are only considering flush draws that use both hole cards
+function hasFlushDraw(handCards, boardCards) {
+    const suitToCount = {};
+    const allCards = handCards.concat(boardCards);
+    allCards.forEach(card => {
+        const currentSuitCount = suitToCount[card.suit] || 0;
+        suitToCount[card.suit] = currentSuitCount + 1;
+    });
+
+    const hasDraw = Object.entries(suitToCount).some(([suit, count]) => {
+        if (count == 4 && handCards.every(c => c.suit == suit)) {
+            return true
+        }
+        return false
+    })
+    return hasDraw
 }
