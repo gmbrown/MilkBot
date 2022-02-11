@@ -447,8 +447,16 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     console.log("Considering betting based on these things:")
     betOptions.forEach(betOption => {
         console.log("callTo: " + betOption.callTo + ", raiseTo: " + betOption.raiseTo + ", " + betOption.message)
-        highestCallTo = Math.max(highestCallTo, betOption.callTo)
-        highestRaiseTo = Math.max(highestRaiseTo, betOption.raiseTo)
+        if (highestCallTo === mb.ALL || betOption.callTo === mb.ALL) {
+            highestCallTo = mb.ALL
+        } else {
+            highestCallTo = Math.max(highestCallTo, betOption.callTo)
+        }
+        if (highestRaiseTo === mb.ALL || betOption.RaiseTo === mb.ALL) {
+            highestRaiseTo = mb.ALL
+        } else {
+            highestRaiseTo = Math.max(highestRaiseTo, betOption.raiseTo)
+        }
     })
 
     console.log("Will call to: " + highestCallTo + " or raise to: " + highestRaiseTo)
