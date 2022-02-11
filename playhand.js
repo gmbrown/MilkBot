@@ -129,7 +129,7 @@ function makeBetOfSize(callToLimit, raiseToLimit) { // TODO later on, take in in
     if (game.action_widget.all_in && betSizeIfAllIn <= raiseToLimit) {
         console.log("Can't/won't raise; going all in instead.")
         game.action_widget.all_in.execute()
-    } else if (game.action_widget.call_button && betSizeIfCall < callToLimit) {
+    } else if (game.action_widget.call_button && betSizeIfCall <= callToLimit) {
         console.log("Can't/won't raise; calling instead.")
         checkOrCall()
     } else {
