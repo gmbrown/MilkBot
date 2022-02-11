@@ -407,58 +407,55 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
             callTo: 3,
             raiseTo: 0
         })
-
-        if (betOptions.length === 0) {
-            console.log("Nothing interesting going on with our hand. Check/folding")
-            checkOrFold()
-            return
-        }
-
-        highestCallTo = 0
-        highestRaiseTo = 0
-        console.log("Considering betting based on these things:")
-        betOptions.forEach(betOption => {
-            console.log("callTo: " + betOption.callTo + ", raiseTo: " + betOption.raiseTo + ", " + betOption.message)
-            highestCallTo = Math.max(highestCallTo, betOption.callTo)
-            highestRaiseTo = Math.max(highestRaiseTo, betOption.raiseTo)
-        })
-
-        console.log("Will call to: " + highestCallTo + " or raise to: " + highestRaiseTo)
-        makeBetUsingMultipliers(highestCallTo, highestRaiseTo)
-
-        return
     }
 
     // Flush Draw
-    if (hasFlushDraw(holeCards, boardCards)) {
-        console.log("we have 4 to the flush using both hole cards")
-        if (boardCards.length === 3) {
-            makeBetUsingMultipliers(10, 10)
-            return
-        } else if (boardCards.length === 4) {
-            makeBetUsingMultipliers(5, 5)
-            return
-        } else {
-            console.log("flush draw is worthless with all the cards out already")
+    if (hasFlushDraw(cards, boardCards) && boardCards.length !== 5) {
+            betOptions.push({
+                message: "flush draw using both hole cards",
+                callTo: 10,
+                raiseTo: 10
+            })
         }
     }
 
     // Open ended straight draw
-    if (hasStraightDraw(holeCards, boardCards) && !hasStraightDraw([], boardCards)) {
+    if (hasStraightDraw(cards, boardCards) && !hasStraightDraw([], boardCards)) {
         console.log("we have an open ended straight draw using at least 1 hole card")
         if (boardCards.length === 3) {
-            makeBetUsingMultipliers(10, 10)
-            return
+            betOptions.push({
+                message: "open ended straight draw using both hole cards",
+                callTo: 12,
+                raiseTo: 12
+            })
         } else if (boardCards.length === 4) {
-            makeBetUsingMultipliers(5, 5)
-            return
-        } else {
-            console.log("straight draw is worthless with all the cards out already")
+            betOptions.push({
+                message: "open ended straight draw using both hole cards",
+                callTo: 10,
+                raiseTo: 10
+            })
         }
     }
 
-    console.log("Doesn't look like I have anything interesting. check/folding")
-    checkOrFold()
+    if (betOptions.length === 0) {
+        console.log("Nothing interesting going on with our hand. Check/folding")
+        checkOrFold()
+        return
+    }
+
+    highestCallTo = 0
+    highestRaiseTo = 0
+    console.log("Considering betting based on these things:")
+    betOptions.forEach(betOption => {
+        console.log("callTo: " + betOption.callTo + ", raiseTo: " + betOption.raiseTo + ", " + betOption.message)
+        highestCallTo = Math.max(highestCallTo, betOption.callTo)
+        highestRaiseTo = Math.max(highestRaiseTo, betOption.raiseTo)
+    })
+
+    console.log("Will call to: " + highestCallTo + " or raise to: " + highestRaiseTo)
+    makeBetUsingMultipliers(highestCallTo, highestRaiseTo)
+
+    return
 }
 
 function handleShowdown() {
