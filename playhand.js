@@ -219,7 +219,7 @@ function preflop(cardsString) {
     const handRanksString = card1.rank + card2.rank
 
     if (card1.suit === card2.suit) {
-        const suitedBetMultipliers = suitedPreFlopHandsToBetMultipliers(handRanksString)
+        const suitedBetMultipliers = suitedPreFlopHandsToBetMultipliers[handRanksString]
         if (suitedBetMultipliers) {
             console.log("Preflop cards are suited, and match one of the suited starting hands")
             const [callToMult, raiseToMult] = suitedBetMultipliers;
@@ -383,7 +383,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 betOptions.push({
                     message: "Top pair",
                     callTo: 30,
-                    raiseTo: 0
+                    raiseTo: 10
                 })
             }
         } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
