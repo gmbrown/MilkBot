@@ -246,87 +246,121 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     myhand = myPokerHand(cards, boardCards)
     usedHoleCards = getHoleCardsUsed(cards, boardCards)
 
-    if (myhand === mb.FOUR_OF_A_KIND && usedHoleCards.length > 0) {
-        console.log("Holy smokes! Four of a kind!")
-        makeBetUsingMultipliers(mb.ALL, 4 * boardCards.length)
-        return
-    }
+    const betOptions = []
 
-    // add in some logic for draws
+    if (myhand === mb.FOUR_OF_A_KIND && usedHoleCards.length > 0) {
+        betOptions.push({
+            message: "Four of a kind",
+            callTo: mb.ALL,
+            raiseTo: 4 * boardCards.length
+        })
+    }
 
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
         // TODO: for full house check if my pocket pair is used for the 3 of a kind part
         if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE].includes(myhand) && usedHoleCards.length === 2) {
-            console.log("Our pocket pair hit something!")
-            makeBetUsingMultipliers(mb.ALL, 3 * boardCards.length)
+            betOptions.push({
+                message: "Pocket pair that hit trips or better",
+                callTo: mb.ALL,
+                raiseTo: 3 * boardCards.length
+            })
         } else if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
-            console.log("Our pocket pair is top pair!")
-            makeBetUsingMultipliers(mb.ALL, 5)
+            betOptions.push({
+                message: "Pocket pair overpair",
+                callTo: mb.ALL,
+                raiseTo: 5
+            })
         } else if (cards[0].ranknum > 9) {
-            console.log("Even though our pocket pair isn't the top pair it's still high")
-            makeBetUsingMultipliers(5, 0)
-        } else {
-            // TODO: technically we could have a flush using one hole card and maybe not want to fold.
-            console.log("Our pocket pair seems weak, check/folding")
-            checkOrFold()
+            betOptions.push({
+                message: "Pocket pair isn't top pair but it's high",
+                callTo: 5,
+                raiseTo: 0
+            })
         }
-        return
     }
 
     // full houses
     if (myhand === mb.FULL_HOUSE && usedHoleCards.length > 0) {
-        console.log("we have a full house and it's not on the board")
-        makeBetUsingMultipliers(mb.ALL, 8)
-        return
+        betOptions.push({
+            message: "Full house using at least 1 hole card",
+            callTo: mb.ALL,
+            raiseTo: 8
+        })
     }
 
     // flushes
     if (myhand === mb.FLUSH) {
         if (usedHoleCards.length === 2) {
-            console.log("we have a flush using both our hole cards")
-            makeBetUsingMultipliers(mb.ALL, 7)
+            betOptions.push({
+                message: "Flush using both our hole cards",
+                callTo: mb.ALL,
+                raiseTo: 7
+            })
         } else if (usedHoleCards.length === 1) {
             // TODO: it matters what card we have
-            console.log("we have a flush using only 1 hole card")
-            makeBetUsingMultipliers(5, 0)
+            betOptions.push({
+                message: "Flush using 1 hole card",
+                callTo: 10,
+                raiseTo: 0
+            })
         }
-        // TODO: we might beat the board!
-        console.log("flush on the board")
-        checkOrFold()
-        return
+        // Flush on the board
+        // TODO: We might beat the board
+        // Right now this is just for logging
+        betOptions.push({
+            message: "Flush on the board",
+            callTo: 0,
+            raiseTo: 0
+        })
     }
 
     // straights
     if (myhand === mb.STRAIGHT) {
         if (usedHoleCards.length === 2) {
             // TODO: see if there is 4 to a flush
-            console.log("we have a straight using both our hole cards")
-            makeBetUsingMultipliers(mb.ALL, 7)
+            betOptions.push({
+                message: "Straight using both hole cards",
+                callTo: mb.ALL,
+                raiseTo: 7
+            })
         } else if (usedHoleCards.length === 1) {
             console.log("we have a straight using only 1 hole card")
-            makeBetUsingMultipliers(25, 3)
+            betOptions.push({
+                message: "",
+                callTo: 20,
+                raiseTo: 3
+            })
         }
+        // Straight on the board
         // TODO: we might beat the board!
-        console.log("straight on the board")
-        checkOrFold()
-        return
+        // Right now this is just for logging
+        betOptions.push({
+            message: "Straight on the board",
+            callTo: 0,
+            raiseTo: 0
+        })
     }
 
     // trips (only using one card in hand)
     if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
         // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
-        console.log("We have 3 of a kind using 1 hole card")
-        makeBetUsingMultipliers(25, 3 * boardCards.length)
-        return
+        betOptions.push({
+            message: "Trips using 1 hole card",
+            callTo: 25,
+            raiseTo: 3 * boardCards.length
+        })
     }
 
     // two pair (using both) (and not pocket pair)
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
-        // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
-        console.log("We have two pair using both hole cards")
-        makeBetUsingMultipliers(25, 2 * boardCards.length)
-        return
+        // TODO: if there are 4 to a flush or straight on the board, this is actually pretty weak
+        // TODO: If it's a pocket pair we might want to handle this differently
+        betOptions.push({
+            message: "Two pair using both hole cards",
+            callTo: 25,
+            raiseTo: 2 * boardCards.length
+        })
     }
 
     // pair (possible 2 pair with one pair on the board)
@@ -335,24 +369,66 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         if (usedHoleCards[0].ranknum === boardCardRankNumDescending[0]) {
             console.log("We have top pair")
             if (boardCards.length === 3) {
-                makeBetUsingMultipliers(10, 3)
+                betOptions.push({
+                    message: "Top pair",
+                    callTo: 10,
+                    raiseTo: 3
+                })
             } else if (boardCards.length === 4) {
-                makeBetUsingMultipliers(20, 0)
+                betOptions.push({
+                    message: "Top pair",
+                    callTo: 20,
+                    raiseTo: 0
+                })
             } else {
-                makeBetUsingMultipliers(30, 10)
+                betOptions.push({
+                    message: "Top pair",
+                    callTo: 30,
+                    raiseTo: 0
+                })
             }
             return
         } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
             console.log("we have second pair")
             if (boardCards.length === 3) {
-                makeBetUsingMultipliers(5, 1)
+                betOptions.push({
+                    message: "Second pair",
+                    callTo: 5,
+                    raiseTo: 2
+                })
             } else {
-                makeBetUsingMultipliers(5, 0)
+                betOptions.push({
+                    message: "Top pair",
+                    callTo: 5,
+                    raiseTo: 0
+                })
             }
             return
         }
-        console.log("we have a pair, but it's low")
-        makeBetUsingMultipliers(3, 0)
+        betOptions.push({
+            message: "low pair",
+            callTo: 3,
+            raiseTo: 0
+        })
+
+        if (betOptions.length === 0) {
+            console.log("Nothing interesting going on with our hand. Check/folding")
+            checkOrFold()
+            return
+        }
+
+        highestCallTo = 0
+        highestRaiseTo = 0
+        console.log("Considering betting based on these things:")
+        betOptions.forEach(betOption => {
+            console.log("callTo: " + betOption.callTo + ", raiseTo: " + betOption.raiseTo + ", " + betOption.message)
+            highestCallTo = Math.max(highestCallTo, betOption.callTo)
+            highestRaiseTo = Math.max(highestRaiseTo, betOption.raiseTo)
+        })
+
+        console.log("Will call to: " + highestCallTo + " or raise to: " + highestRaiseTo)
+        makeBetUsingMultipliers(highestCallTo, highestRaiseTo)
+
         return
     }
 
@@ -533,11 +609,7 @@ function hasFlushDraw(handCards, boardCards) {
         suitToCount[card.suit] = currentSuitCount + 1;
     });
 
-    const hasDraw = Object.entries(suitToCount).some(([suit, count]) => {
-        if (count == 4 && handCards.every(c => c.suit == suit)) {
-            return true
-        }
-        return false
+    return Object.entries(suitToCount).some(([suit, count]) => {
+        return count === 4 && handCards.every(c => c.suit === suit)
     })
-    return hasDraw
 }
