@@ -411,12 +411,11 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // Flush Draw
     if (hasFlushDraw(cards, boardCards) && boardCards.length !== 5) {
-            betOptions.push({
-                message: "flush draw using both hole cards",
-                callTo: 10,
-                raiseTo: 10
-            })
-        }
+        betOptions.push({
+            message: "flush draw using both hole cards",
+            callTo: 10,
+            raiseTo: 10
+        })
     }
 
     // Open ended straight draw
