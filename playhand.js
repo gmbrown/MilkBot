@@ -346,19 +346,33 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     // straights
     if (myhand === mb.STRAIGHT) {
         if (usedHoleCards.length === 2) {
-            // TODO: see if there is 4 to a flush
-            betOptions.push({
-                message: "Straight using both hole cards",
-                callTo: mb.ALL,
-                raiseTo: 7
-            })
+            if (fourToFlush(boadCards)) {
+                betOptions.push({
+                    message: "Straight using both hole cards, but 4 to flush on the board",
+                    callTo: 5,
+                    raiseTo: 5
+                })
+            } else {
+                betOptions.push({
+                    message: "Straight using both hole cards",
+                    callTo: mb.ALL,
+                    raiseTo: 7
+                })
+            }
         } else if (usedHoleCards.length === 1) {
-            console.log("we have a straight using only 1 hole card")
-            betOptions.push({
-                message: "",
-                callTo: 20,
-                raiseTo: 3
-            })
+            if (fourToFlush(boardCards)) {
+                betOptions.push({
+                    message: "Straight using 1 hole card, but 4 to flush on the board",
+                    callTo: 3,
+                    raiseTo: 3
+                })
+            } else {
+                betOptions.push({
+                    message: "Straight using only 1 hole card",
+                    callTo: 20,
+                    raiseTo: 3
+                })
+            }
         }
         // Straight on the board
         // TODO: we might beat the board!
@@ -372,23 +386,37 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // trips (only using one card in hand)
     if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
-        // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
-        betOptions.push({
-            message: "Trips using 1 hole card",
-            callTo: 25,
-            raiseTo: 3 * boardCards.length
-        })
+        if (fourToFlush(boardCards)) {
+            betOptions.push({
+                message: "Trips using 1 hole card, but 4 to flush on the board",
+                callTo: 3,
+                raiseTo: 3
+            })
+        } else {
+            betOptions.push({
+                message: "Trips using 1 hole card",
+                callTo: 25,
+                raiseTo: 3 * boardCards.length
+            })
+        }
     }
 
     // two pair (using both) (and not pocket pair)
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
-        // TODO: if there are 4 to a flush or straight on the board, this is actually pretty weak
         // TODO: If it's a pocket pair we might want to handle this differently
-        betOptions.push({
-            message: "Two pair using both hole cards",
-            callTo: 25,
-            raiseTo: 2 * boardCards.length
-        })
+        if (fourToFlush(boardCards)) {
+            betOptions.push({
+                message: "Two pair using both hole cards but 4 to flush on the board",
+                callTo: 3,
+                raiseTo: 3
+            })
+        } else {
+            betOptions.push({
+                message: "Two pair using both hole cards",
+                callTo: 25,
+                raiseTo: 2 * boardCards.length
+            })
+        }
     }
 
     // pair (possible 2 pair with one pair on the board)
@@ -627,6 +655,19 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
+}
+
+// Some duplicated work here that we could clean up
+function fourToFlush(allCards) {
+    const suitToCount = {};
+    allCards.forEach(card => {
+        const currentSuitCount = suitToCount[card.suit] || 0;
+        suitToCount[card.suit] = currentSuitCount + 1;
+    });
+
+    return Object.values(suitToCount).some((count) => {
+        return count === 4
+    })
 }
 
 // For now we are only considering flush draws that use both hole cards
