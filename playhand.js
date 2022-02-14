@@ -266,8 +266,31 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
-        // TODO: for full house check if my pocket pair is used for the 3 of a kind part
-        if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE].includes(myhand) && usedHoleCards.length === 2) {
+        if (myhand = mb.FULL_HOUSE && usedHoleCards.length === 2) {
+            if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
+                if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+                    betOptions.push({
+                        message: "Three of a kind on the board and we have a pocket overpair",
+                        callTo: mb.ALL,
+                        raiseTo: 3 * boardCards.length
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Three of a kind on the board and we have a pocket pair (not overpair)",
+                        callTo: 10,
+                        raiseTo: 3
+                    })
+                }
+            } else {
+                betOptions.push({
+                    message: "Pocket pair hit a third and a pair on the board for full house",
+                    callTo: mb.ALL,
+                    raiseTo: 3 * boardCards.length
+                })
+            }
+        }
+
+        if (myhand === mb.THREE_OF_A_KIND && usedHoleCards.length === 2) {
             betOptions.push({
                 message: "Pocket pair that hit trips or better",
                 callTo: mb.ALL,
@@ -408,9 +431,8 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         }
     }
 
-    // two pair (using both) (and not pocket pair)
+    // two pair (using both hole cards)
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
-        // TODO: If it's a pocket pair we might want to handle this differently
         if (fourToFlushOrStraigh(boardCards)) {
             betOptions.push({
                 message: "Two pair using both hole cards but 4 to flush on the board",
@@ -418,6 +440,21 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 raiseTo: 3
             })
         } else {
+            if (cards[0].rank === cards[1].rank) {
+                if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+                    betOptions.push({
+                        message: "Pair on the board and pocket pair overpair",
+                        callTo: 15,
+                        raiseTo: 3
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Pair on the board and pocket pair (not overpair)",
+                        callTo: 5,
+                        raiseTo: 1
+                    })
+                }
+            }
             betOptions.push({
                 message: "Two pair using both hole cards",
                 callTo: 25,
