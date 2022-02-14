@@ -248,6 +248,14 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     const betOptions = []
 
+    if (myhand === mb.STRAIGHT_FLUSH && usedHoleCards.length > 0) {
+        betOptions.push({
+            message: "Straight flush!",
+            callTo: mb.ALL,
+            raiseTo: 4 * boardCards.length
+        })
+    }
+
     if (myhand === mb.FOUR_OF_A_KIND && usedHoleCards.length > 0) {
         betOptions.push({
             message: "Four of a kind",
