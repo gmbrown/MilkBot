@@ -386,7 +386,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // trips (only using one card in hand)
     if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
-        if (fourToFlush(boardCards)) {
+        if (fourToFlushOrStraigh(boardCards)) {
             betOptions.push({
                 message: "Trips using 1 hole card, but 4 to flush on the board",
                 callTo: 3,
@@ -404,7 +404,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     // two pair (using both) (and not pocket pair)
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
         // TODO: If it's a pocket pair we might want to handle this differently
-        if (fourToFlush(boardCards)) {
+        if (fourToFlushOrStraigh(boardCards)) {
             betOptions.push({
                 message: "Two pair using both hole cards but 4 to flush on the board",
                 callTo: 3,
@@ -655,6 +655,10 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
+}
+
+function fourToFlushOrStraigh(allCards) {
+    return fourToFlush(allCards) || checkStraightOrDrawOfLength(allCards, 4)
 }
 
 // Some duplicated work here that we could clean up
