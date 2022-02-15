@@ -284,7 +284,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     // full houses
     if (myhand === mb.FULL_HOUSE && usedHoleCards.length > 0) {
         if (usedHoleCards === 2) {
-            if (cards[0].rank === cards[1].rank && myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
+            if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
                 if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
                     betOptions.push({
                         message: "Three of a kind on the board and we have a pocket overpair",
