@@ -248,6 +248,14 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     const betOptions = []
 
+    if (myhand === mb.STRAIGHT_FLUSH && usedHoleCards.length > 0) {
+        betOptions.push({
+            message: "Straight flush!",
+            callTo: mb.ALL,
+            raiseTo: 4 * boardCards.length
+        })
+    }
+
     if (myhand === mb.FOUR_OF_A_KIND && usedHoleCards.length > 0) {
         betOptions.push({
             message: "Four of a kind",
@@ -419,17 +427,17 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // Open ended straight draw
-    if (hasStraightDraw(cards, boardCards) && !hasStraightDraw([], boardCards)) {
+    if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
         console.log("we have an open ended straight draw using at least 1 hole card")
         if (boardCards.length === 3) {
             betOptions.push({
-                message: "open ended straight draw using both hole cards",
+                message: "open ended straight draw using at least 1 hole card",
                 callTo: 12,
                 raiseTo: 12
             })
         } else if (boardCards.length === 4) {
             betOptions.push({
-                message: "open ended straight draw using both hole cards",
+                message: "open ended straight draw using at least 1 hole card",
                 callTo: 10,
                 raiseTo: 10
             })
@@ -507,6 +515,21 @@ function getHoleCardsUsed(holeCards, boardCards) {
     }
 }
 
+function checkStraightOrDrawOfLength(allCards, lengthOfDraw) {
+    const sortedRanks = allCards.sort((a, b) => a.ranknum - b.ranknum).map(c => c.rank)
+    let uniqueRanksInOrder = [... new Set(sortedRanks)].join('')
+    if (uniqueRanksInOrder.endsWith("A")) {
+        uniqueRanksInOrder = "A" + uniqueRanksInOrder
+    }
+
+    for (i = 0; i <= uniqueRanksInOrder.length - lengthOfDraw; i++) {
+        subStringToCheck = uniqueRanksInOrder.slice(i, i + lengthOfDraw)
+        if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
+            return mb.STRAIGHT;
+        }
+    }
+}
+
 function myPokerHand(handCards, boardCards) {
     const rankToCount = {};
     const suitToCount = {};
@@ -532,7 +555,21 @@ function myPokerHand(handCards, boardCards) {
     });
 
     // Check straight flush
-    // will do this later
+    var hasFlush = false
+    var hasStraightFlush = false
+    Object.entries(suitToCount).forEach(([suit, count]) => {
+        if (count >= 5) {
+            hasFlush = true
+            const cardsOfSuit = allCards.filter(card => card.suit === suit)
+            console.log(cardsOfSuit)
+            if (checkStraightOrDrawOfLength(cardsOfSuit, 5)) {
+                hasStraightFlush = true
+            }
+        }
+    })
+    if (hasStraightFlush) {
+        return mb.STRAIGHT_FLUSH
+    }
 
     // Check 4 of a kind
     if (highestCount === 4) {
@@ -545,23 +582,13 @@ function myPokerHand(handCards, boardCards) {
     }
 
     // Check flush
-    const maxOfOneSuit = Math.max(...Object.values(suitToCount))
-    if (maxOfOneSuit >= 5) {
+    if (hasFlush) {
         return mb.FLUSH;
     }
 
     // Check straight
-    const sortedRanks = allCards.sort((a, b) => a.ranknum - b.ranknum).map(c => c.rank)
-    let uniqueRanksInOrder = [... new Set(sortedRanks)].join('')
-    if (uniqueRanksInOrder.endsWith("A")) {
-        uniqueRanksInOrder = "A" + uniqueRanksInOrder
-    }
-
-    for (i = 0; i <= uniqueRanksInOrder.length - 5; i++) {
-        subStringToCheck = uniqueRanksInOrder.slice(i, i + 5)
-        if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
-            return mb.STRAIGHT;
-        }
+    if (checkStraightOrDrawOfLength(allCards, 5)) {
+        return mb.STRAIGHT
     }
 
     // Check 3 of a kind
@@ -580,25 +607,6 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
-}
-
-// For now only considering open ended straight draws
-// Will call this once with and without hand cards to know if we use them
-function hasStraightDraw(handCards, boardCards) {
-    const allCards = handCards.concat(boardCards);
-    const sortedRanks = allCards.sort((a, b) => a.ranknum - b.ranknum).map(c => c.rank)
-    let uniqueRanksInOrder = [... new Set(sortedRanks)].join('')
-    if (uniqueRanksInOrder.endsWith("A")) {
-        uniqueRanksInOrder = "A" + uniqueRanksInOrder
-    }
-
-    for (i = 0; i <= uniqueRanksInOrder.length - 4; i++) {
-        subStringToCheck = uniqueRanksInOrder.slice(i, i + 4)
-        if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
-            return true
-        }
-    }
-    return false
 }
 
 // For now we are only considering flush draws that use both hole cards
