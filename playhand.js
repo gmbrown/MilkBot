@@ -509,7 +509,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // pocket pairs
-    if (myHand === mb.PAIR && usedHoleCards === 2) {
+    if (myhand === mb.PAIR && usedHoleCards === 2) {
         if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
             betOptions.push({
                 message: "Pocket pair overpair",
