@@ -196,7 +196,7 @@ function cardStringToObj(cardsString) {
         }
         var rank = cardString[0];
         var suit = cardString[1];
-        
+
         var ranknum = 0;
         switch(rank) {
             case 'T':
@@ -281,15 +281,15 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         })
     }
 
-    // pocket pairs
-    if (cards[0].rank === cards[1].rank) {
-        if (myhand === mb.FULL_HOUSE && usedHoleCards.length === 2) {
-            if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
+    // full houses
+    if (myhand === mb.FULL_HOUSE && usedHoleCards.length > 0) {
+        if (usedHoleCards === 2) {
+            if (cards[0].rank === cards[1].rank && myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
                 if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
                     betOptions.push({
                         message: "Three of a kind on the board and we have a pocket overpair",
                         callTo: mb.ALL,
-                        raiseTo: 3 * boardCards.length
+                        raiseTo: 4 * boardCards.length
                     })
                 } else {
                     betOptions.push({
@@ -300,41 +300,24 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 }
             } else {
                 betOptions.push({
-                    message: "Pocket pair hit a third and a pair on the board for full house",
+                    message: "Full house using at least both hole cards",
                     callTo: mb.ALL,
-                    raiseTo: 3 * boardCards.length
+                    raiseTo: 4 * boardCards.length
                 })
             }
-        }
-
-        if (myhand === mb.THREE_OF_A_KIND && usedHoleCards.length === 2) {
+        } else if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
             betOptions.push({
-                message: "Pocket pair that hit trips or better",
-                callTo: mb.ALL,
-                raiseTo: 3 * boardCards.length
-            })
-        } else if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
-            betOptions.push({
-                message: "Pocket pair overpair",
-                callTo: mb.ALL,
+                message: "Full house using 1 hole card, but trips on the board",
+                callTo: 5,
                 raiseTo: 5
             })
-        } else if (cards[0].ranknum > 9) {
+        } else {
             betOptions.push({
-                message: "Pocket pair isn't top pair but it's high",
-                callTo: 5,
-                raiseTo: 0
+                message: "Full house using 1 hole card, no trips on the board",
+                callTo: mb.ALL,
+                raiseTo: 8
             })
         }
-    }
-
-    // full houses
-    if (myhand === mb.FULL_HOUSE && usedHoleCards.length > 0) {
-        betOptions.push({
-            message: "Full house using at least 1 hole card",
-            callTo: mb.ALL,
-            raiseTo: 8
-        })
     }
 
     // flushes
@@ -425,12 +408,18 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // trips (only using one card in hand)
-    if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
+    if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length >= 1) {
         if (fourToFlushOrStraight(boardCards)) {
             betOptions.push({
-                message: "Trips using 1 hole card, but 4 to flush/straight on the board",
+                message: "Trips using at least 1 hole card, but 4 to flush/straight on the board",
                 callTo: 3,
                 raiseTo: 3
+            })
+        } else if (usedHoleCards === 2) {
+            betOptions.push({
+                message: "Pocket pair that hit trips or better",
+                callTo: mb.ALL,
+                raiseTo: 3 * boardCards.length
             })
         } else {
             betOptions.push({
@@ -519,6 +508,23 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         })
     }
 
+    // pocket pairs
+    if (myHand === mb.PAIR && usedHoleCards === 2) {
+        if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+            betOptions.push({
+                message: "Pocket pair overpair",
+                callTo: mb.ALL,
+                raiseTo: 5
+            })
+        } else if (cards[0].ranknum > 9) {
+            betOptions.push({
+                message: "Pocket pair isn't top pair but it's high",
+                callTo: 5,
+                raiseTo: 0
+            })
+        }
+    }
+
     // Flush Draw
     if (hasFlushDraw(cards, boardCards) && boardCards.length !== 5) {
         betOptions.push({
@@ -579,7 +585,7 @@ function handleShowdown() {
     if (game.n_players_in_hand > 1 && game.players[seat].is_sitting_in && !game.players[seat].is_folded) {
         console.log('SHOWDOWN WITH ME IN IT')
         console.log('# players in showdown:', game.n_players_in_hand)
-        tauntOpportunity = Object.entries(game.players).some(([i, player]) => 
+        tauntOpportunity = Object.entries(game.players).some(([i, player]) =>
             player.is_sitting_in && !player.is_folded && player.chips === 0 && i !== seat + ''
         )
         console.log('tauntOpportunity', tauntOpportunity)
