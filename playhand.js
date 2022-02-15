@@ -428,7 +428,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
         if (fourToFlushOrStraight(boardCards)) {
             betOptions.push({
-                message: "Trips using 1 hole card, but 4 to flush on the board",
+                message: "Trips using 1 hole card, but 4 to flush/straight on the board",
                 callTo: 3,
                 raiseTo: 3
             })
@@ -445,7 +445,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
         if (fourToFlushOrStraight(boardCards)) {
             betOptions.push({
-                message: "Two pair using both hole cards but 4 to flush on the board",
+                message: "Two pair using both hole cards but 4 to flush/straight on the board",
                 callTo: 3,
                 raiseTo: 3
             })
@@ -660,6 +660,7 @@ function myPokerHand(handCards, boardCards) {
     var hasStraightFlush = false
     Object.entries(suitToCount).forEach(([suit, count]) => {
         if (count >= 5) {
+            hasFlush = true
             const cardsOfSuit = allCards.filter(card => card.suit === suit)
             if (checkStraightOrDrawOfLength(cardsOfSuit, 5)) {
                 hasStraightFlush = true
