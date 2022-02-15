@@ -427,7 +427,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // Open ended straight draw
-    if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boadCards, 4)) {
+    if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
         console.log("we have an open ended straight draw using at least 1 hole card")
         if (boardCards.length === 3) {
             betOptions.push({
@@ -555,24 +555,19 @@ function myPokerHand(handCards, boardCards) {
     });
 
     // Check straight flush
-    var flush = false
-    var straightFlush = false
+    var hasFlush = false
+    var hasStraightFlush = false
     Object.entries(suitToCount).forEach(([suit, count]) => {
         if (count >= 5) {
-            flush = true
-            const cardsOfSuit = []
-            allCards.forEach(card => {
-                if (card.suit === suit) {
-                    cardsOfSuit.push(card)
-                }
-            })
+            hasFlush = true
+            const cardsOfSuit = allCards.filter(card => card.suit === suit)
             console.log(cardsOfSuit)
             if (checkStraightOrDrawOfLength(cardsOfSuit, 5)) {
-                straightFlush = true
+                hasStraightFlush = true
             }
         }
     })
-    if (straightFlush) {
+    if (hasStraightFlush) {
         return mb.STRAIGHT_FLUSH
     }
 
@@ -587,7 +582,7 @@ function myPokerHand(handCards, boardCards) {
     }
 
     // Check flush
-    if (flush) {
+    if (hasFlush) {
         return mb.FLUSH;
     }
 
