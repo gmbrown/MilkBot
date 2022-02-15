@@ -24,36 +24,43 @@ const preFlopHandsToBetMultipliers = {
     72: [mb.ALL, mb.ALL],
     KK: [mb.ALL, mb.ALL],
     QQ: [mb.ALL, mb.ALL],
-    JJ: [mb.ALL, 6],
-    TT: [mb.ALL, 5],
+    JJ: [mb.ALL, 3],
+    TT: [mb.ALL, 3],
     99: [10, 3],
     88: [10, 3],
-    AK: [mb.ALL, 10],
-    AQ: [30, 10],
-    AJ: [30, 10],
+    AK: [mb.ALL, 3],
+    AQ: [30, 3],
+    AJ: [30, 3],
+    A5: [3, 1],
+    AT: [8, 3],
+    A9: [1, 1],
+    A8: [1, 1],
     KQ: [8, 3],
     KJ: [8, 3],
-    KT: [3, 1],
-    AT: [8, 3],
     KT: [3, 3],
-    QT: [3, 3],
+    K9: [1, 1],
+    QJ: [3, 1],
+    QT: [3, 1],
+    Q9: [1, 1],
+    Q8: [1, 1],
     JT: [3, 1],
-    T9: [3, 1],
+    J9: [1, 1],
+    J8: [1, 1],
+    J7: [1, 1],
+    T9: [1, 1],
     77: [8, 1],
     66: [8, 1],
     55: [8, 1],
     44: [8, 1],
     33: [8, 1],
-    22: [8, 1],
-    A9: [8, 1],
-    A8: [8, 1]
+    22: [8, 1]
 }
 
 const suitedPreFlopHandsToBetMultipliers = {
     AK: [mb.ALL, mb.ALL],
     AQ: [mb.ALL, mb.ALL],
-    AJ: [30, 20],
-    AT: [10, 10],
+    AJ: [30, 5],
+    AT: [10, 5],
     A9: [10, 3],
     A8: [8, 3],
     A7: [6, 1],
@@ -63,13 +70,20 @@ const suitedPreFlopHandsToBetMultipliers = {
     A3: [5, 1],
     A2: [5, 1],
     KQ: [10, 5],
-    K9: [6, 2],
-    K8: [3, 1],
-    QJ: [8, 5],
+    KJ: [10, 5],
+    KT: [8, 3],
+    K9: [6, 3],
+    K8: [1, 3],
+    QJ: [10, 5],
+    QT: [8, 1],
     Q9: [3, 1],
-    JT: [8, 5],
+    Q8: [3, 1],
+    JT: [10, 3],
     J9: [3, 1],
-    T9: [6, 2],
+    J8: [3, 1],
+    J7: [3, 1],
+    T9: [6, 3],
+    T8: [1, 1],
     98: [6, 1],
     87: [5, 1],
     76: [5, 1],
@@ -92,9 +106,12 @@ async function checkIfTurnAndPlay () {
     playHand(holeCards, boardCards)
 }
 
-function showCardsAtEndOfHand() {
+function setDefaultGameOptions() {
     if (game.game_options_widget.allow_easy_reveal && !game.game_options_widget.easy_reveal.is_checked()) {
-        game.game_options_widget.easy_reveal.make_selected()
+        game.game_options_widget.easy_reveal.clicked()
+    }
+    if (game.game_options_widget.bomb_pot_value && !game.game_options_widget.bomb_pot.is_checked()) {
+        game.game_options_widget.bomb_pot.clicked()
     }
 }
 
@@ -158,7 +175,7 @@ function playHand(handString, boardString) {
         return;
     }
     try {
-        showCardsAtEndOfHand()
+        setDefaultGameOptions()
     } catch (e) {
         // we don't really care
     }
@@ -266,8 +283,31 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
-        // TODO: for full house check if my pocket pair is used for the 3 of a kind part
-        if ([mb.THREE_OF_A_KIND, mb.FULL_HOUSE].includes(myhand) && usedHoleCards.length === 2) {
+        if (myhand === mb.FULL_HOUSE && usedHoleCards.length === 2) {
+            if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
+                if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+                    betOptions.push({
+                        message: "Three of a kind on the board and we have a pocket overpair",
+                        callTo: mb.ALL,
+                        raiseTo: 3 * boardCards.length
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Three of a kind on the board and we have a pocket pair (not overpair)",
+                        callTo: 10,
+                        raiseTo: 3
+                    })
+                }
+            } else {
+                betOptions.push({
+                    message: "Pocket pair hit a third and a pair on the board for full house",
+                    callTo: mb.ALL,
+                    raiseTo: 3 * boardCards.length
+                })
+            }
+        }
+
+        if (myhand === mb.THREE_OF_A_KIND && usedHoleCards.length === 2) {
             betOptions.push({
                 message: "Pocket pair that hit trips or better",
                 callTo: mb.ALL,
@@ -346,19 +386,33 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     // straights
     if (myhand === mb.STRAIGHT) {
         if (usedHoleCards.length === 2) {
-            // TODO: see if there is 4 to a flush
-            betOptions.push({
-                message: "Straight using both hole cards",
-                callTo: mb.ALL,
-                raiseTo: 7
-            })
+            if (fourToFlush(boardCards)) {
+                betOptions.push({
+                    message: "Straight using both hole cards, but 4 to flush on the board",
+                    callTo: 5,
+                    raiseTo: 5
+                })
+            } else {
+                betOptions.push({
+                    message: "Straight using both hole cards",
+                    callTo: mb.ALL,
+                    raiseTo: 7
+                })
+            }
         } else if (usedHoleCards.length === 1) {
-            console.log("we have a straight using only 1 hole card")
-            betOptions.push({
-                message: "",
-                callTo: 20,
-                raiseTo: 3
-            })
+            if (fourToFlush(boardCards)) {
+                betOptions.push({
+                    message: "Straight using 1 hole card, but 4 to flush on the board",
+                    callTo: 3,
+                    raiseTo: 3
+                })
+            } else {
+                betOptions.push({
+                    message: "Straight using only 1 hole card",
+                    callTo: 20,
+                    raiseTo: 3
+                })
+            }
         }
         // Straight on the board
         // TODO: we might beat the board!
@@ -372,23 +426,52 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // trips (only using one card in hand)
     if (myhand == mb.THREE_OF_A_KIND && usedHoleCards.length == 1) {
-        // TOOD: if there are 4 to a flush or straight on the board, this is actually pretty weak
-        betOptions.push({
-            message: "Trips using 1 hole card",
-            callTo: 25,
-            raiseTo: 3 * boardCards.length
-        })
+        if (fourToFlushOrStraight(boardCards)) {
+            betOptions.push({
+                message: "Trips using 1 hole card, but 4 to flush/straight on the board",
+                callTo: 3,
+                raiseTo: 3
+            })
+        } else {
+            betOptions.push({
+                message: "Trips using 1 hole card",
+                callTo: 25,
+                raiseTo: 3 * boardCards.length
+            })
+        }
     }
 
-    // two pair (using both) (and not pocket pair)
+    // two pair (using both hole cards)
     if (myhand == mb.TWO_PAIR && usedHoleCards.length == 2) {
-        // TODO: if there are 4 to a flush or straight on the board, this is actually pretty weak
-        // TODO: If it's a pocket pair we might want to handle this differently
-        betOptions.push({
-            message: "Two pair using both hole cards",
-            callTo: 25,
-            raiseTo: 2 * boardCards.length
-        })
+        if (fourToFlushOrStraight(boardCards)) {
+            betOptions.push({
+                message: "Two pair using both hole cards but 4 to flush/straight on the board",
+                callTo: 3,
+                raiseTo: 3
+            })
+        } else {
+            if (cards[0].rank === cards[1].rank) {
+                if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+                    betOptions.push({
+                        message: "Pair on the board and pocket pair overpair",
+                        callTo: 15,
+                        raiseTo: 3
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Pair on the board and pocket pair (not overpair)",
+                        callTo: 5,
+                        raiseTo: 1
+                    })
+                }
+            } else {
+                betOptions.push({
+                    message: "Two pair using both hole cards",
+                    callTo: 25,
+                    raiseTo: 2 * boardCards.length
+                })
+            }
+        }
     }
 
     // pair (possible 2 pair with one pair on the board)
@@ -415,7 +498,6 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             }
         } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
-            console.log("we have second pair")
             if (boardCards.length === 3) {
                 betOptions.push({
                     message: "Second pair",
@@ -424,7 +506,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             } else {
                 betOptions.push({
-                    message: "Top pair",
+                    message: "Second pair",
                     callTo: 5,
                     raiseTo: 0
                 })
@@ -448,7 +530,6 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // Open ended straight draw
     if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
-        console.log("we have an open ended straight draw using at least 1 hole card")
         if (boardCards.length === 3) {
             betOptions.push({
                 message: "open ended straight draw using at least 1 hole card",
@@ -581,7 +662,6 @@ function myPokerHand(handCards, boardCards) {
         if (count >= 5) {
             hasFlush = true
             const cardsOfSuit = allCards.filter(card => card.suit === suit)
-            console.log(cardsOfSuit)
             if (checkStraightOrDrawOfLength(cardsOfSuit, 5)) {
                 hasStraightFlush = true
             }
@@ -627,6 +707,23 @@ function myPokerHand(handCards, boardCards) {
     }
 
     return mb.HIGH_CARD;
+}
+
+function fourToFlushOrStraight(allCards) {
+    return fourToFlush(allCards) || checkStraightOrDrawOfLength(allCards, 4)
+}
+
+// Some duplicated work here that we could clean up
+function fourToFlush(allCards) {
+    const suitToCount = {};
+    allCards.forEach(card => {
+        const currentSuitCount = suitToCount[card.suit] || 0;
+        suitToCount[card.suit] = currentSuitCount + 1;
+    });
+
+    return Object.values(suitToCount).some((count) => {
+        return count === 4
+    })
 }
 
 // For now we are only considering flush draws that use both hole cards
