@@ -106,9 +106,12 @@ async function checkIfTurnAndPlay () {
     playHand(holeCards, boardCards)
 }
 
-function showCardsAtEndOfHand() {
+function setDefaultGameOptions() {
     if (game.game_options_widget.allow_easy_reveal && !game.game_options_widget.easy_reveal.is_checked()) {
-        game.game_options_widget.easy_reveal.make_selected()
+        game.game_options_widget.easy_reveal.clicked()
+    }
+    if (game.game_options_widget.bomb_pot_value && !game.game_options_widget.bomb_pot.is_checked()) {
+        game.game_options_widget.bomb_pot.clicked()
     }
 }
 
@@ -172,7 +175,7 @@ function playHand(handString, boardString) {
         return;
     }
     try {
-        showCardsAtEndOfHand()
+        setDefaultGameOptions()
     } catch (e) {
         // we don't really care
     }
@@ -280,7 +283,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // pocket pairs
     if (cards[0].rank === cards[1].rank) {
-        if (myhand = mb.FULL_HOUSE && usedHoleCards.length === 2) {
+        if (myhand === mb.FULL_HOUSE && usedHoleCards.length === 2) {
             if (myPokerHand([], boardCards) === mb.THREE_OF_A_KIND) {
                 if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
                     betOptions.push({
@@ -361,7 +364,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         // Flush on the board
 
         // Check if we beat the board and have A or K
-        const ranksInSuit = handCards.map((card) => {
+        const ranksInSuit = cards.map((card) => {
 
             // Can look at any board card because we know all 5 are the same suit
             if (card.suit === boardCards[0].suit) {
@@ -390,7 +393,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     // straights
     if (myhand === mb.STRAIGHT) {
         if (usedHoleCards.length === 2) {
-            if (fourToFlush(boadCards)) {
+            if (fourToFlush(boardCards)) {
                 betOptions.push({
                     message: "Straight using both hole cards, but 4 to flush on the board",
                     callTo: 5,
@@ -468,12 +471,13 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                         raiseTo: 1
                     })
                 }
+            } else {
+                betOptions.push({
+                    message: "Two pair using both hole cards",
+                    callTo: 25,
+                    raiseTo: 2 * boardCards.length
+                })
             }
-            betOptions.push({
-                message: "Two pair using both hole cards",
-                callTo: 25,
-                raiseTo: 2 * boardCards.length
-            })
         }
     }
 
@@ -501,7 +505,6 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             }
         } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
-            console.log("we have second pair")
             if (boardCards.length === 3) {
                 betOptions.push({
                     message: "Second pair",
@@ -510,7 +513,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             } else {
                 betOptions.push({
-                    message: "Top pair",
+                    message: "Second pair",
                     callTo: 5,
                     raiseTo: 0
                 })
@@ -533,8 +536,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     // Open ended straight draw
-    if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boadCards, 4)) {
-        console.log("we have an open ended straight draw using at least 1 hole card")
+    if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
         if (boardCards.length === 3) {
             betOptions.push({
                 message: "open ended straight draw using at least 1 hole card",
@@ -672,7 +674,6 @@ function myPokerHand(handCards, boardCards) {
                     cardsOfSuit.push(card)
                 }
             })
-            console.log(cardsOfSuit)
             if (checkStraightOrDrawOfLength(cardsOfSuit, 5)) {
                 straightFlush = true
             }
