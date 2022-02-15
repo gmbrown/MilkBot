@@ -345,7 +345,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         } else {
             // Flush on the board
             // Check if we beat the board and have A or K
-            const hasHighCardInSuit = handCards
+            const hasHighCardInSuit = cards
                 .some(card => ["A", "K"]
                 .includes(card.rank) && card.suit === boardCards[0].suit)
 
