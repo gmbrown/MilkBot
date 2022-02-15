@@ -319,34 +319,27 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 callTo: 5,
                 raiseTo: 0
             })
-        }
-
-        // Flush on the board
-
-        // Check if we beat the board and have A or K
-        const ranksInSuit = handCards.map((card) => {
-
-            // Can look at any board card because we know all 5 are the same suit
-            if (card.suit === boardCards[0].suit) {
-                return card.rank
-            }
-
-            return ""
-        })
-
-        if (ranksInSuit.some(rank => ["A", "K"].includes(rank))) {
-            betOptions.push({
-                message: "Flush using 1 hole card (A or K)",
-                callTo: mb.ALL,
-                raiseTo: 4
-            })
         } else {
-            // Right now this is just for logging
-            betOptions.push({
-                message: "Flush on the board",
-                callTo: 0,
-                raiseTo: 0
-            })
+            // Flush on the board
+            // Check if we beat the board and have A or K
+            const hasHighCardInSuit = handCards
+                .some(card => ["A", "K"]
+                .includes(card.rank) && card.suit === boardCards[0].suit)
+
+            if (hasHighCardInSuit) {
+                betOptions.push({
+                    message: "Flush using 1 hole card (A or K)",
+                    callTo: mb.ALL,
+                    raiseTo: 4
+                })
+            } else {
+                // Right now this is just for logging
+                betOptions.push({
+                    message: "Flush on the board",
+                    callTo: 0,
+                    raiseTo: 0
+                })
+            }
         }
     }
 
