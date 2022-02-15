@@ -243,8 +243,8 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     var cards = cardStringToObj(cardsString)
     var boardCards = cardStringToObj(boardCardsString)
 
-    myhand = myPokerHand(cards, boardCards)
-    usedHoleCards = getHoleCardsUsed(cards, boardCards)
+    const myhand = myPokerHand(cards, boardCards)
+    const usedHoleCards = getHoleCardsUsed(cards, boardCards)
 
     const betOptions = []
 
@@ -306,21 +306,41 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 raiseTo: 7
             })
         } else if (usedHoleCards.length === 1) {
-            // TODO: it matters what card we have
+            if (["A", "K"].includes(usedHoleCards[0].rank)) {
+                betOptions.push({
+                    message: "Flush using 1 hole card (A or K)",
+                    callTo: mb.ALL,
+                    raiseTo: 4
+                })
+            }
+
             betOptions.push({
-                message: "Flush using 1 hole card",
-                callTo: 10,
+                message: "Flush using 1 hole card (not A or K)",
+                callTo: 5,
                 raiseTo: 0
             })
+        } else {
+            // Flush on the board
+            // Check if we beat the board and have A or K
+            const hasHighCardInSuit = handCards
+                .some(card => ["A", "K"]
+                .includes(card.rank) && card.suit === boardCards[0].suit)
+
+            if (hasHighCardInSuit) {
+                betOptions.push({
+                    message: "Flush using 1 hole card (A or K)",
+                    callTo: mb.ALL,
+                    raiseTo: 4
+                })
+            } else {
+                // Right now this is just for logging
+                betOptions.push({
+                    message: "Flush on the board",
+                    callTo: 0,
+                    raiseTo: 0
+                })
+            }
         }
-        // Flush on the board
-        // TODO: We might beat the board
-        // Right now this is just for logging
-        betOptions.push({
-            message: "Flush on the board",
-            callTo: 0,
-            raiseTo: 0
-        })
     }
 
     // straights
