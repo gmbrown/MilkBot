@@ -411,32 +411,32 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                     raiseTo: 3
                 })
             }
-        }
-
-        // Straight on the board
-        highestBoardCardRankNum = boardCards.map(c => c.rankNum).max()
-        if (cards.some(c => c.rankNum === highestBoardCardRankNum + 1)) {
-            // We beat the straight on the board
-            if (fourToFlush(boardCards)) {
+        } else {
+            // Straight on the board
+            highestBoardCardRankNum = Math.max(...boardCards.map(c => c.rankNum))
+            if (cards.some(c => c.rankNum === highestBoardCardRankNum + 1)) {
+                // We beat the straight on the board
+                if (fourToFlush(boardCards)) {
+                    betOptions.push({
+                        message: "We beat the straight on the board, but there are 4 to a flush",
+                        callTo: 0,
+                        raiseTo: 0
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Straight on the board, but we have a better straight",
+                        callTo: mb.ALL,
+                        raiseTo: 5
+                    })
+                }
+            } else {
+                // Right now this is just for logging
                 betOptions.push({
-                    message: "We beat the straight on the board, but there are 4 to a flush",
+                    message: "Straight on the board",
                     callTo: 0,
                     raiseTo: 0
                 })
-            } else {
-                betOptions.push({
-                    message: "Straight on the board, but we have a better straight",
-                    callTo: mb.ALL,
-                    raiseTo: 5
-                })
             }
-        } else {
-            // Right now this is just for logging
-            betOptions.push({
-                message: "Straight on the board",
-                callTo: 0,
-                raiseTo: 0
-            })
         }
     }
 
