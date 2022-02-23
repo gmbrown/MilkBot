@@ -247,6 +247,13 @@ function preflop(cardsString) {
 
     const betMultipliers = preFlopHandsToBetMultipliers[handRanksString]
     if (!betMultipliers) {
+        if (Math.random() > .95) {
+            // 5% of the time we will randomly limp in
+            console.log("Even though this isn't a hand we usually play, randomly limping in if it's cheap.")
+            makeBetUsingMultipliers(3, 1)
+            return
+        }
+
         console.log('Checking or folding.')
         checkOrFold()
         return
@@ -357,11 +364,19 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             } else {
                 // Right now this is just for logging
-                betOptions.push({
-                    message: "Flush on the board",
-                    callTo: 0,
-                    raiseTo: 0
-                })
+                if (Math.random() > .9) {
+                    betOptions.push({
+                        message: "Flush on the board, but randomly bluffing 10% of the time",
+                        callTo: 0,
+                        raiseTo: mb.ALL
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Flush on the board",
+                        callTo: 0,
+                        raiseTo: 0
+                    })
+                }
             }
         }
     }
@@ -527,21 +542,39 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // Flush Draw
     if (hasFlushDraw(cards, boardCards) && boardCards.length !== 5) {
-        betOptions.push({
-            message: "flush draw using both hole cards",
-            callTo: 10,
-            raiseTo: 10
-        })
+        if (Math.random > .8) {
+            // Randomly go all in 20% of the time
+            betOptions.push({
+                message: "flush draw using both hole cards, randomly going all in 20% of the time",
+                callTo: 10,
+                raiseTo: mb.ALL
+            })
+        } else {
+            betOptions.push({
+                message: "flush draw using both hole cards",
+                callTo: 15,
+                raiseTo: 5
+            })
+        }
     }
 
     // Open ended straight draw
     if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
         if (boardCards.length === 3) {
-            betOptions.push({
-                message: "open ended straight draw using at least 1 hole card",
-                callTo: 12,
-                raiseTo: 12
-            })
+            if (Math.random > .8) {
+                // Randomly go all in 20% of the time
+                betOptions.push({
+                    message: "straight draw, randomly going all in 20% of the time",
+                    callTo: 10,
+                    raiseTo: mb.ALL
+                })
+            } else {
+                betOptions.push({
+                    message: "open ended straight draw using at least 1 hole card",
+                    callTo: 12,
+                    raiseTo: 12
+                })
+            }
         } else if (boardCards.length === 4) {
             betOptions.push({
                 message: "open ended straight draw using at least 1 hole card",
@@ -552,6 +585,13 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     }
 
     if (betOptions.length === 0) {
+        if (Math.random() > .99) {
+            betOptions.push({
+                message: "Random bluff 1% of the time",
+                callTo: 0,
+                raiseTo: mb.ALL
+            })
+        }
         console.log("Nothing interesting going on with our hand. Check/folding")
         checkOrFold()
         return
