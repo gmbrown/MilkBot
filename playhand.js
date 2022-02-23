@@ -24,11 +24,11 @@ const preFlopHandsToBetMultipliers = {
     72: [mb.ALL, mb.ALL],
     KK: [mb.ALL, mb.ALL],
     QQ: [mb.ALL, mb.ALL],
-    JJ: [mb.ALL, 3],
-    TT: [mb.ALL, 3],
+    JJ: [mb.ALL, mb.ALL],
+    TT: [mb.ALL, mb.ALL],
     99: [10, 3],
     88: [10, 3],
-    AK: [mb.ALL, 3],
+    AK: [mb.ALL, mb.ALL],
     AQ: [30, 3],
     AJ: [30, 3],
     A5: [3, 1],
@@ -53,7 +53,7 @@ const preFlopHandsToBetMultipliers = {
     55: [8, 1],
     44: [8, 1],
     33: [8, 1],
-    22: [8, 1]
+    22: [mb.ALL, mb.ALL]
 }
 
 const suitedPreFlopHandsToBetMultipliers = {
