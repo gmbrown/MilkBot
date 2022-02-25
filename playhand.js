@@ -48,12 +48,12 @@ const preFlopHandsToBetMultipliers = {
     J8: [1, 1],
     J7: [1, 1],
     T9: [1, 1],
-    77: [8, 1],
-    66: [8, 1],
-    55: [8, 1],
-    44: [8, 1],
-    33: [8, 1],
-    22: [mb.ALL, mb.ALL]
+    77: [3, 1],
+    66: [3, 1],
+    55: [3, 1],
+    44: [3, 1],
+    33: [3, 1],
+    22: [3, 1]
 }
 
 const suitedPreFlopHandsToBetMultipliers = {
