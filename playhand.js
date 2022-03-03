@@ -624,9 +624,8 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
         if (boardCards.length === 3 && playersInHand === 2) {
             if (Math.random > .7) {
-                // Randomly go all in 20% of the time
                 betOptions.push({
-                    message: "straight draw, randomly going all in 20% of the time",
+                    message: "straight draw, randomly going all in 30% of the time",
                     callTo: 12,
                     raiseTo: mb.ALL
                 })
