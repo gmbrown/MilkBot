@@ -368,7 +368,6 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                     raiseTo: 4
                 })
             } else {
-                // Right now this is just for logging
                 if (Math.random() > .9) {
                     betOptions.push({
                         message: "Flush on the board, but randomly bluffing 10% of the time",
@@ -376,6 +375,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                         raiseTo: mb.ALL
                     })
                 } else {
+                    // Right now this is just for logging
                     betOptions.push({
                         message: "Flush on the board",
                         callTo: 0,
