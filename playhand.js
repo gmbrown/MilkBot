@@ -189,7 +189,7 @@ function playHand(handString, boardString) {
         preflop(handString)
     }
     else {
-        postflop(handString, boardString)
+        postflop(handString, boardString, game.n_players_in_hand)
     }
 }
 
@@ -503,92 +503,130 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
 
     // pair (possible 2 pair with one pair on the board)
     if ([mb.PAIR, mb.TWO_PAIR].includes(myhand) && usedHoleCards.length == 1) {
-        boardCardRankNumDescending = boardCards.map(c => c.ranknum).sort((a, b) => b - a)
-        if (usedHoleCards[0].ranknum === boardCardRankNumDescending[0]) {
-            if (boardCards.length === 3) {
-                betOptions.push({
-                    message: "Top pair",
-                    callTo: 10,
-                    raiseTo: 3
-                })
-            } else if (boardCards.length === 4) {
-                betOptions.push({
-                    message: "Top pair",
-                    callTo: 20,
-                    raiseTo: 0
-                })
-            } else {
-                betOptions.push({
-                    message: "Top pair",
-                    callTo: 30,
-                    raiseTo: 10
-                })
-            }
-        } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
-            if (boardCards.length === 3) {
-                betOptions.push({
-                    message: "Second pair",
-                    callTo: 5,
-                    raiseTo: 2
-                })
-            } else {
-                betOptions.push({
-                    message: "Second pair",
-                    callTo: 5,
-                    raiseTo: 0
-                })
-            }
-        }
-        betOptions.push({
-            message: "low pair",
-            callTo: 3,
-            raiseTo: 0
-        })
-    }
-
-    // pocket pairs
-    if (myhand === mb.PAIR && usedHoleCards === 2) {
-        if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+        if (fourToFlushOrStraight(boardCards)) {
             betOptions.push({
-                message: "Pocket pair overpair",
-                callTo: mb.ALL,
-                raiseTo: 5
+                message: "Pair, but 4 to flush/straight on the board",
+                callTo: 3,
+                raiseTo: 3
             })
-        } else if (cards[0].ranknum > 9) {
+        } else {
+            boardCardRankNumDescending = boardCards.map(c => c.ranknum).sort((a, b) => b - a)
+            if (usedHoleCards[0].ranknum === boardCardRankNumDescending[0]) {
+                if (boardCards.length === 3) {
+                    if (playersInHand === 2) {
+                        betOptions.push({
+                            message: "Top pair (only 1 other player in hand)",
+                            callTo: 20,
+                            raiseTo: 5
+                        })
+                    } else {
+                        betOptions.push({
+                            message: "Top pair",
+                            callTo: 10,
+                            raiseTo: 3
+                        })
+                    }
+                } else if (boardCards.length === 4) {
+                    if (playersInHand === 2) {
+                        betOptions.push({
+                            message: "Top pair (only 1 other player in hand)",
+                            callTo: 20,
+                            raiseTo: 10
+                        })
+                    } else {
+                        betOptions.push({
+                            message: "Top pair",
+                            callTo: 10,
+                            raiseTo: 0
+                        })
+                    }
+                } else {
+                    if (playersInHand === 2) {
+                        betOptions.push({
+                            message: "Top pair (only 1 other player in hand)",
+                            callTo: 30,
+                            raiseTo: 10
+                        })
+                    } else {
+                        betOptions.push({
+                            message: "Top pair",
+                            callTo: 10,
+                            raiseTo: 0
+                        })
+                    }
+                }
+            } else if (usedHoleCards[0].ranknum === boardCardRankNumDescending[1]) {
+                if (boardCards.length === 3) {
+                    betOptions.push({
+                        message: "Second pair",
+                        callTo: 5,
+                        raiseTo: 2
+                    })
+                } else {
+                    betOptions.push({
+                        message: "Second pair",
+                        callTo: 5,
+                        raiseTo: 0
+                    })
+                }
+            }
             betOptions.push({
-                message: "Pocket pair isn't top pair but it's high",
-                callTo: 5,
+                message: "low pair",
+                callTo: 3,
                 raiseTo: 0
             })
         }
     }
 
-    // Flush Draw
-    if (hasFlushDraw(cards, boardCards) && boardCards.length !== 5) {
-        if (Math.random > .8) {
-            // Randomly go all in 20% of the time
+    // pocket pairs
+    if (myhand === mb.PAIR && usedHoleCards === 2) {
+        if (fourToFlushOrStraight(boardCards)) {
             betOptions.push({
-                message: "flush draw using both hole cards, randomly going all in 20% of the time",
+                message: "Pocket pair, but 4 to flush/straight on the board",
+                callTo: 3,
+                raiseTo: 3
+            })
+        } else {
+            if (boardCards.every(c => c.ranknum < cards[0].ranknum)) {
+                betOptions.push({
+                    message: "Pocket pair overpair",
+                    callTo: mb.ALL,
+                    raiseTo: 5
+                })
+            } else if (cards[0].ranknum > 9 && playersInHand == 2) {
+                betOptions.push({
+                    message: "Pocket pair isn't top pair but it's high, and only 1 other player",
+                    callTo: 10,
+                    raiseTo: 5
+                })
+            }
+        }
+    }
+
+    // Flush Draw
+    if (hasFlushDraw(cards, boardCards)) {
+        if (boardCards.length === 3 && playersInHand === 2 && Math.random > .5) {
+            betOptions.push({
+                message: "flush draw using both hole cards (3 cards on board), only 1 other player in hand, randomly going all in half the time",
                 callTo: 10,
                 raiseTo: mb.ALL
             })
-        } else {
+        } else if (boardCards.length !== 5) {
             betOptions.push({
                 message: "flush draw using both hole cards",
-                callTo: 15,
-                raiseTo: 5
+                callTo: 10,
+                raiseTo: 0
             })
         }
     }
 
     // Open ended straight draw
     if (checkStraightOrDrawOfLength(cards.concat(boardCards), 4) && !checkStraightOrDrawOfLength(boardCards, 4)) {
-        if (boardCards.length === 3) {
-            if (Math.random > .8) {
-                // Randomly go all in 20% of the time
+        if (boardCards.length === 3 && playersInHand === 2) {
+            if (Math.random > .7) {
                 betOptions.push({
-                    message: "straight draw, randomly going all in 20% of the time",
-                    callTo: 10,
+                    message: "straight draw, randomly going all in 30% of the time",
+                    callTo: 12,
                     raiseTo: mb.ALL
                 })
             } else {
@@ -598,7 +636,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                     raiseTo: 12
                 })
             }
-        } else if (boardCards.length === 4) {
+        } else if (boardCards.length !== 5) {
             betOptions.push({
                 message: "open ended straight draw using at least 1 hole card",
                 callTo: 10,
@@ -607,10 +645,10 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
         }
     }
 
-    if (betOptions.length === 0) {
-        if (Math.random() > .99) {
+    if (betOptions.length === 0 && playersInHand === 2) {
+        if (Math.random() > .97) {
             betOptions.push({
-                message: "Random bluff 1% of the time",
+                message: "Random bluff 3% of the time against 1 other player",
                 callTo: 0,
                 raiseTo: mb.ALL
             })
