@@ -45,7 +45,8 @@ function cardStringToObj(cardsString) {
       var card = {
           'suit': suit,
           'rank': rank,
-          'ranknum': ranknum
+          'ranknum': ranknum,
+          'cardString': cardString
       };
       cards.push(card);
   })
@@ -143,9 +144,18 @@ function myPokerHand(handCards, boardCards) {
       }
 
     }
+
+    tripRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+
+    // If there are 2 separate 3 of a kinds on the board then we need to treat the lower one as a pair
+    if (tripRanks.length > 1) {
+      pairRanks.push(tripRanks[1]);
+    }
+    pairRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+
     return {
       hand: mb.FULL_HOUSE,
-      handRanks: [tripRank, pairRank],
+      handRanks: [tripRanks[0], pairRanks[0]],
       kickers: []
     }
   }
@@ -197,6 +207,7 @@ function myPokerHand(handCards, boardCards) {
     }
 
     pairRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+    pairRanks = pairRanks.slice(0,2);
 
     var cardsMinusPairs = allCards.filter(card => !pairRanks.includes(card.rank));
 
@@ -246,4 +257,138 @@ function getTopNRanks(cards, n) {
     }
   }
   return topNRanks;
+}
+
+function compareHands(hand1, hand2, board) {
+  var hand1Results = myPokerHand(hand1, board);
+  var hand2Results = myPokerHand(hand2, board);
+
+  const handsInOrder = [
+    mb.HIGH_CARD,
+    mb.PAIR,
+    mb.TWO_PAIR,
+    mb.THREE_OF_A_KIND,
+    mb.STRAIGHT, mb.FLUSH,
+    mb.FULL_HOUSE,
+    mb.FOUR_OF_A_KIND,
+    mb.STRAIGHT_FLUSH
+  ]
+
+  var diff = handsInOrder.indexOf(hand1Results.hand) - handsInOrder.indexOf(hand2Results.hand)
+
+  if (diff > 0) {
+    return "win";
+  } else if (diff < 0) {
+    return "lose";
+  }
+
+  for (var i = 0; i < hand1Results.handRanks.length; i++) {
+    diff = '23456789TJQKA'.indexOf(hand1Results.handRanks[i]) - '23456789TJQKA'.indexOf(hand2Results.handRanks[i]);
+    if (diff > 0) {
+      return "win";
+    } else if (diff < 0) {
+      return "lose";
+    }
+  }
+
+  for (var i = 0; i < hand1Results.kickers.length; i++) {
+    diff = '23456789TJQKA'.indexOf(hand1Results.kickers[i]) - '23456789TJQKA'.indexOf(hand2Results.kickers[i]);
+    if (diff > 0) {
+      return "win";
+    } else if (diff < 0) {
+      return "lose";
+    }
+  }
+
+  return "draw";
+}
+
+const ALL_CARD_STRINGS = [
+  "2D",
+  "2C",
+  "2H",
+  "2S",
+  "3D",
+  "3C",
+  "3H",
+  "3S",
+  "4D",
+  "4C",
+  "4H",
+  "4S",
+  "5D",
+  "5C",
+  "5H",
+  "5S",
+  "6D",
+  "6C",
+  "6H",
+  "6S",
+  "7D",
+  "7C",
+  "7H",
+  "7S",
+  "8D",
+  "8C",
+  "8H",
+  "8S",
+  "9D",
+  "9C",
+  "9H",
+  "9S",
+  "TD",
+  "TC",
+  "TH",
+  "TS",
+  "JD",
+  "JC",
+  "JH",
+  "JS",
+  "QD",
+  "QC",
+  "QH",
+  "QS",
+  "KD",
+  "KC",
+  "KH",
+  "KS",
+  "AD",
+  "AC",
+  "AH",
+  "AS"
+]
+
+function winAgainstPercent(hand, board) {
+  const exceptCards = new Set([
+    ...hand.map(handCard => handCard.cardString),
+    ...board.map(boardCard => boardCard.cardString)
+  ])
+
+  let wins = 0;
+  let losses = 0;
+  let draws = 0;
+  for (let i = 0; i < ALL_CARD_STRINGS.length; i++) {
+    if (exceptCards.has(ALL_CARD_STRINGS[i])) {
+      continue;
+    }
+    for (let j = i + 1; j < ALL_CARD_STRINGS.length; j++) {
+      if (exceptCards.has(ALL_CARD_STRINGS[j])) {
+        continue;
+      }
+      const otherHand = cardStringToObj(`${ALL_CARD_STRINGS[i]}?${ALL_CARD_STRINGS[j]}?`);
+      const result = compareHands(hand, otherHand, board);
+      if (result === "win") {
+        wins++;
+      } else if (result === "lose") {
+        losses++;
+      } else if (result === "draw") {
+        draws++;
+      }
+    }
+  }
+
+  console.log("wins: " + wins);
+  console.log("losses: " + losses);
+  console.log("draws: " + draws);
+  return (wins / (wins + losses))
 }
