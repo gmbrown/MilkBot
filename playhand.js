@@ -164,12 +164,6 @@ function makeBetUsingMultipliers(callToMult, raiseToMult) {
     makeBetOfSize(callToLimit, raiseToLimit);
 }
 
-function goAllIn() {
-    const betInFront = game.action_widget.bet_in_front;
-    const betSizeIfAllIn = betInFront + game.action_widget.stack_size;
-    makeBetOfSize(betSizeIfAllIn, betSizeIfAllIn);
-}
-
 function playHand(handString, boardString) {
     if (game.ruleset_name !== 'NL Texas Holdem') {
         console.log(`Folding/checking because we aren't playing 'NL Texas Holdem'. The game is ${game.ruleset_name}.`)
@@ -190,45 +184,31 @@ function playHand(handString, boardString) {
     }
 }
 
+const nonNumericRankToNum = {
+    T: 10,
+    J: 11,
+    Q: 12,
+    K: 13,
+    A: 14
+}
+
 function cardStringToObj(cardsString) {
-    var cards = [];
-    cardsString.split("?").forEach(cardString => {
-        if (cardString === "") {
-            return;
-        }
-        var rank = cardString[0];
-        var suit = cardString[1];
+    const cards = cardsString.split("?")
+        .filter(card => card !== "")
+        .map(cardString => {
+            const rank = cardString[0];
+            const suit = cardString[1];
 
-        var ranknum = 0;
-        switch(rank) {
-            case 'T':
-                ranknum = 10;
-                break;
-            case 'J':
-                ranknum = 11;
-                break;
-            case 'Q':
-                ranknum = 12;
-                break;
-            case 'K':
-                ranknum = 13;
-                break;
-            case 'A':
-                ranknum = 14;
-                break;
-            default:
-                ranknum = parseInt(rank)
-        }
-        // Rank number should go 0 - 12
-        ranknum -= 2;
+            let ranknum = nonNumericRankToNum[rank] || parseInt(rank);
+            // Rank number should go 0 - 12
+            ranknum -= 2;
 
-        var card = {
-            'suit': suit,
-            'rank': rank,
-            'ranknum': ranknum
-        };
-        cards.push(card);
-    })
+            return {
+                suit,
+                rank,
+                ranknum
+            };
+        });
     cards.sort((a,b) => (b.ranknum - a.ranknum));
     return cards
 }
