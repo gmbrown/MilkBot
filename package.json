@@ -1,0 +1,12 @@
+{
+  "name": "milkbot",
+  "source": "index.js",
+  "scripts": {
+    "build": "parcel build",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "parcel": "^2.6.2",
+    "husky": "^8.0.0"
+  }
+}

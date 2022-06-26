@@ -1,6 +1,3 @@
-setInterval(checkIfTurnAndPlay, 2500)
-socket.on('is in showdown', handleShowdown)
-socket.on('distributing pot', handlePotDistribution)
 let tauntOpportunity = false; // set to true if I'm in a showdown and someone else is all-in
 
 const mb = { // constants
@@ -98,7 +95,7 @@ const suitedPreFlopHandsToBetMultipliers = {
     32: [1, 1]
 }
 
-async function checkIfTurnAndPlay () {
+export async function checkIfTurnAndPlay () {
     if (!game.action_widget || !game.players[game.client_perspective].cards.card_str) {
         // seems like sometimes action_widget will be truthy but there are no cards... skip
         return
@@ -681,7 +678,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
     return
 }
 
-function handleShowdown() {
+export function handleShowdown() {
     const seat = game.client_perspective
     if (game.n_players_in_hand > 1 && game.players[seat].is_sitting_in && !game.players[seat].is_folded) {
         console.log('SHOWDOWN WITH ME IN IT')
@@ -693,7 +690,7 @@ function handleShowdown() {
     }
 }
 
-function handlePotDistribution(potData) {
+export function handlePotDistribution(potData) {
     const seat = game.client_perspective;
     if (tauntOpportunity && potData.winners[seat] && Object.keys(potData.winners).length === 1) {
         // TODO will taunt before animations finish. eventually, add a delay or wait for some event
