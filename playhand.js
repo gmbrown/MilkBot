@@ -374,7 +374,7 @@ function postflop(cardsString, boardCardsString, playersInHand, potSizeAtStartOf
                 })
             } else {
                 betOptions.push({
-                    message: "Straight using both hole cards",
+                    message: "Straight using both hole cards, wahoo!",
                     callTo: mb.ALL,
                     raiseTo: 7
                 })
