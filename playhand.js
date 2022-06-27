@@ -192,7 +192,7 @@ const nonNumericRankToNum = {
     A: 14
 }
 
-function cardStringToObj(cardsString) {
+export function cardStringToObj(cardsString) {
     const cards = cardsString.split("?")
         .filter(card => card !== "")
         .map(cardString => {

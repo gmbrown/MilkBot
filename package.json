@@ -1,12 +1,21 @@
 {
   "name": "milkbot",
   "source": "index.js",
+  "type": "module",
   "scripts": {
     "build": "parcel build",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest)"
+  },
+  "jest": {
+    "transform": {},
+    "globals": {
+      "game": {}
+    }
   },
   "devDependencies": {
-    "parcel": "^2.6.2",
-    "husky": "^8.0.0"
+    "husky": "^8.0.0",
+    "jest": "^28.1.1",
+    "parcel": "^2.6.2"
   }
 }
