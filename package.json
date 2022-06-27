@@ -8,6 +8,9 @@
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
     "test:watch": "yarn test --watch"
   },
+  "lint-staged": {
+    "**/*.js": "prettier --write --ignore-unknown"
+  },
   "jest": {
     "transform": {},
     "globals": {
@@ -17,6 +20,8 @@
   "devDependencies": {
     "husky": "^8.0.0",
     "jest": "^28.1.1",
-    "parcel": "^2.6.2"
+    "lint-staged": "^13.0.3",
+    "parcel": "^2.6.2",
+    "prettier": "2.7.1"
   }
 }
