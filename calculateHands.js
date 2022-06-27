@@ -10,7 +10,7 @@ const mb = { // constants
   STRAIGHT_FLUSH: 'STRAIGHT FLUSH'
 }
 
-function cardStringToObj(cardsString) {
+export function cardStringToObj(cardsString) {
   var cards = [];
   cardsString.split("?").forEach(cardString => {
       if (cardString === "") {
@@ -61,8 +61,8 @@ function checkStraightOrDrawOfLength(allCards, lengthOfDraw) {
       uniqueRanksInOrder = "A" + uniqueRanksInOrder
   }
 
-  for (i = 0; i <= uniqueRanksInOrder.length - lengthOfDraw; i++) {
-      subStringToCheck = uniqueRanksInOrder.slice(i, i + lengthOfDraw)
+  for (let i = 0; i <= uniqueRanksInOrder.length - lengthOfDraw; i++) {
+      let subStringToCheck = uniqueRanksInOrder.slice(i, i + lengthOfDraw)
       if ("A23456789TJQKA".indexOf(subStringToCheck) !== -1) {
           return subStringToCheck[lengthOfDraw - 1]
       }
@@ -83,7 +83,7 @@ function myPokerHand(handCards, boardCards) {
 
   let highestCount = 0
   let secondHighestCount = 0
-  Object.entries(rankToCount).forEach(([count]) => {
+  Object.entries(rankToCount).forEach(([_, count]) => {
       if (count > highestCount) {
           secondHighestCount = highestCount
           highestCount = count
@@ -117,7 +117,7 @@ function myPokerHand(handCards, boardCards) {
   // Check 4 of a kind
   if (highestCount === 4) {
     var fourOfAKindRank = [];
-    for (rank in rankToCount) {
+    for (let rank in rankToCount) {
       if (rankToCount[rank] == 4) {
         fourOfAKindRank.push(rank);
       }
@@ -136,7 +136,7 @@ function myPokerHand(handCards, boardCards) {
   if (highestCount === 3 && secondHighestCount >= 2) {
     var tripRanks = [];
     var pairRanks = [];
-    for (rank in rankToCount) {
+    for (let rank in rankToCount) {
       if (rankToCount[rank] == 3) {
         tripRanks.push(rank);
       } else if (rankToCount[rank] == 2) {
@@ -200,7 +200,7 @@ function myPokerHand(handCards, boardCards) {
   // Check 2 pair
   if (highestCount === 2 && secondHighestCount === 2) {
     var pairRanks = []
-    for (rank in rankToCount) {
+    for (let rank in rankToCount) {
       if (rankToCount[rank] == 2) {
         pairRanks.push(rank);
       }
@@ -221,7 +221,7 @@ function myPokerHand(handCards, boardCards) {
   // Check pair
   if (highestCount === 2) {
     var pairRank = [];
-    for (rank in rankToCount) {
+    for (let rank in rankToCount) {
       if (rankToCount[rank] == 2) {
         pairRank.push(rank);
       }
@@ -365,7 +365,7 @@ const ALL_CARD_STRINGS = [
   "AS"
 ]
 
-function winAgainstPercent(hand, board) {
+export function winAgainstPercent(hand, board) {
   const exceptCards = new Set([
     ...hand.map(handCard => handCard.cardString),
     ...board.map(boardCard => boardCard.cardString)
@@ -378,7 +378,6 @@ function winAgainstPercent(hand, board) {
       const boardWithCard = [...board, ...cardStringToObj(card)];
       exceptCards.add(card);
       acc += winAgainstPercentFullBoard(hand, boardWithCard, exceptCards);
-      console.log(acc)
       exceptCards.delete(card);
       return acc;
     }, 0)

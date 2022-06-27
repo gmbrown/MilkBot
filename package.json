@@ -5,7 +5,8 @@
   "scripts": {
     "build": "parcel build",
     "prepare": "husky install",
-    "test": "yarn node --experimental-vm-modules $(yarn bin jest)"
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
+    "test:watch": "yarn test --watch"
   },
   "jest": {
     "transform": {},
