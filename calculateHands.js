@@ -83,7 +83,7 @@ function myPokerHand(handCards, boardCards) {
 
   let highestCount = 0
   let secondHighestCount = 0
-  Object.entries(rankToCount).forEach(([rank, count]) => {
+  Object.entries(rankToCount).forEach(([count]) => {
       if (count > highestCount) {
           secondHighestCount = highestCount
           highestCount = count
@@ -145,13 +145,13 @@ function myPokerHand(handCards, boardCards) {
 
     }
 
-    tripRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+    tripRanks.sort((a, b) => RANK_TO_NUMRANK[a] - RANK_TO_NUMRANK[b]);
 
     // If there are 2 separate 3 of a kinds on the board then we need to treat the lower one as a pair
     if (tripRanks.length > 1) {
       pairRanks.push(tripRanks[1]);
     }
-    pairRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+    pairRanks.sort((a, b) => RANK_TO_NUMRANK[a] - RANK_TO_NUMRANK[b]);
 
     return {
       hand: mb.FULL_HOUSE,
@@ -206,7 +206,7 @@ function myPokerHand(handCards, boardCards) {
       }
     }
 
-    pairRanks.sort((a, b) => 'AKQJT98765432'.indexOf(a) - 'AKQJT98765432'.indexOf(b));
+    pairRanks.sort((a, b) => RANK_TO_NUMRANK[a] - RANK_TO_NUMRANK[b]);
     pairRanks = pairRanks.slice(0,2);
 
     var cardsMinusPairs = allCards.filter(card => !pairRanks.includes(card.rank));
@@ -244,37 +244,44 @@ function myPokerHand(handCards, boardCards) {
 }
 
 function getTopNRanks(cards, n) {
-  var ranksInCards = cards.map(card => card.rank);
+  return cards.map(card => card.rank)
+    .sort((a, b) => RANK_TO_NUMRANK[b] - RANK_TO_NUMRANK[a])
+    .slice(0, n);
+}
 
-  var topNRanks = [];
-  const ranks = 'AKQJT98765432'
-  for (var i = 0; i < ranks.length; i++) {
-    if (ranksInCards.includes(ranks[i])) {
-      topNRanks.push(ranks[i]);
-      if (topNRanks.length == n) {
-        return topNRanks;
-      }
-    }
-  }
-  return topNRanks;
+const RANKED_HANDS = {
+  [mb.HIGH_CARD]: 1,
+  [mb.PAIR]: 2,
+  [mb.TWO_PAIR]: 3,
+  [mb.THREE_OF_A_KIND]: 4,
+  [mb.STRAIGHT]: 5,
+  [mb.FLUSH]: 6,
+  [mb.FULL_HOUSE]: 7,
+  [mb.FOUR_OF_A_KIND]: 8,
+  [mb.STRAIGHT_FLUSH]: 9
+}
+
+const RANK_TO_NUMRANK = {
+  'A': 12,
+  'K': 11,
+  'Q': 10,
+  'J': 9,
+  'T': 8,
+  '9': 7,
+  '8': 6,
+  '7': 5,
+  '6': 4,
+  '5': 3,
+  '4': 2,
+  '3': 1,
+  '2': 0
 }
 
 function compareHands(hand1, hand2, board) {
   var hand1Results = myPokerHand(hand1, board);
   var hand2Results = myPokerHand(hand2, board);
 
-  const handsInOrder = [
-    mb.HIGH_CARD,
-    mb.PAIR,
-    mb.TWO_PAIR,
-    mb.THREE_OF_A_KIND,
-    mb.STRAIGHT, mb.FLUSH,
-    mb.FULL_HOUSE,
-    mb.FOUR_OF_A_KIND,
-    mb.STRAIGHT_FLUSH
-  ]
-
-  var diff = handsInOrder.indexOf(hand1Results.hand) - handsInOrder.indexOf(hand2Results.hand)
+  var diff = RANKED_HANDS[hand1Results.hand] - RANKED_HANDS[hand2Results.hand]
 
   if (diff > 0) {
     return "win";
@@ -282,8 +289,8 @@ function compareHands(hand1, hand2, board) {
     return "lose";
   }
 
-  for (var i = 0; i < hand1Results.handRanks.length; i++) {
-    diff = '23456789TJQKA'.indexOf(hand1Results.handRanks[i]) - '23456789TJQKA'.indexOf(hand2Results.handRanks[i]);
+  for (const [i, handRank] of hand1Results.handRanks.entries()) {
+    diff = RANK_TO_NUMRANK[handRank] - RANK_TO_NUMRANK[hand2Results.handRanks[i]];
     if (diff > 0) {
       return "win";
     } else if (diff < 0) {
@@ -291,8 +298,8 @@ function compareHands(hand1, hand2, board) {
     }
   }
 
-  for (var i = 0; i < hand1Results.kickers.length; i++) {
-    diff = '23456789TJQKA'.indexOf(hand1Results.kickers[i]) - '23456789TJQKA'.indexOf(hand2Results.kickers[i]);
+  for (const [i, kicker] of hand1Results.kickers.entries()) {
+    diff = RANK_TO_NUMRANK[kicker] - RANK_TO_NUMRANK[hand2Results.kickers[i]];
     if (diff > 0) {
       return "win";
     } else if (diff < 0) {
@@ -363,19 +370,44 @@ function winAgainstPercent(hand, board) {
     ...hand.map(handCard => handCard.cardString),
     ...board.map(boardCard => boardCard.cardString)
   ])
+  if (board.length === 5) {
+    return winAgainstPercentFullBoard(hand, board, exceptCards);
+  } else if (board.length === 4) {
+    const allOtherCards = ALL_CARD_STRINGS.filter(card => !exceptCards.has(card));
+    const percentTotal = allOtherCards.reduce((acc, card) => {
+      const boardWithCard = [...board, ...cardStringToObj(card)];
+      exceptCards.add(card);
+      acc += winAgainstPercentFullBoard(hand, boardWithCard, exceptCards);
+      console.log(acc)
+      exceptCards.delete(card);
+      return acc;
+    }, 0)
+    return percentTotal / allOtherCards.length;
+  } else if (board.length === 3) {
+    const allOtherCards = ALL_CARD_STRINGS.filter(card => !exceptCards.has(card));
+    let percentTotal = 0;
+    for (let i = 0; i < allOtherCards.length; i++) {
+      exceptCards.add(allOtherCards[i]);
+      for (let j = i + 1; j < allOtherCards.length; j++) {
+        exceptCards.add(allOtherCards[j]);
+        const boardWithCards = [...board, ...cardStringToObj(allOtherCards[i]), ...cardStringToObj(allOtherCards[j])];
+        percentTotal += winAgainstPercentFullBoard(hand, boardWithCards, exceptCards);
+        exceptCards.delete(allOtherCards[j]);
+      }
+      exceptCards.delete(allOtherCards[i]);
+    }
+    return percentTotal / (allOtherCards.length * (allOtherCards.length - 1) / 2);
+  }
+}
 
+function winAgainstPercentFullBoard(hand, board, exceptCards) {
   let wins = 0;
   let losses = 0;
   let draws = 0;
-  for (let i = 0; i < ALL_CARD_STRINGS.length; i++) {
-    if (exceptCards.has(ALL_CARD_STRINGS[i])) {
-      continue;
-    }
-    for (let j = i + 1; j < ALL_CARD_STRINGS.length; j++) {
-      if (exceptCards.has(ALL_CARD_STRINGS[j])) {
-        continue;
-      }
-      const otherHand = cardStringToObj(`${ALL_CARD_STRINGS[i]}?${ALL_CARD_STRINGS[j]}?`);
+  const allOtherCards = ALL_CARD_STRINGS.filter(card => !exceptCards.has(card));
+  for (let i = 0; i < allOtherCards.length; i++) {
+    for (let j = i + 1; j < allOtherCards.length; j++) {
+      const otherHand = cardStringToObj(`${allOtherCards[i]}?${allOtherCards[j]}?`);
       const result = compareHands(hand, otherHand, board);
       if (result === "win") {
         wins++;
@@ -386,9 +418,5 @@ function winAgainstPercent(hand, board) {
       }
     }
   }
-
-  console.log("wins: " + wins);
-  console.log("losses: " + losses);
-  console.log("draws: " + draws);
   return (wins / (wins + losses))
 }
