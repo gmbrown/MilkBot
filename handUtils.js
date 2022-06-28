@@ -1,19 +1,42 @@
 import { HANDS, RANK_TO_NUMRANK } from './constants';
 
-export function checkStraightOrDrawOfLength(allCards, lengthOfDraw) {
-  const sortedRanks = allCards
-    .sort((a, b) => b.ranknum - a.ranknum)
-    .map((c) => c.rank);
-  let uniqueRanksInOrder = [...new Set(sortedRanks)].join('');
-  if (uniqueRanksInOrder.startsWith('A')) {
-    uniqueRanksInOrder = uniqueRanksInOrder + 'A';
-  }
+export function checkStraight(allCardsSorted) {
+  return checkStraightOrDrawOfLength(allCardsSorted, 5, true);
+}
 
-  for (let i = 0; i <= uniqueRanksInOrder.length - lengthOfDraw; i++) {
-    const subStringToCheck = uniqueRanksInOrder.slice(i, i + lengthOfDraw);
-    if ('AKQJT98765432A'.includes(subStringToCheck)) {
-      return subStringToCheck[0];
+export function checkStraightOrDrawOfLength(
+  allCards,
+  lengthOfDraw,
+  isSorted = false
+) {
+  if (!isSorted) {
+    allCards = allCards.sort((a, b) => b.ranknum - a.ranknum);
+  }
+  const sortedRanks = allCards.map((c) => c.rank);
+  const uniqueRanksInOrder = new Set(sortedRanks);
+  const rankIterator = uniqueRanksInOrder.values();
+  let previousRank = rankIterator.next().value;
+  let startingRank = previousRank;
+  let lengthSoFar = 1;
+  for (const rank of rankIterator) {
+    if (RANK_TO_NUMRANK[previousRank] - RANK_TO_NUMRANK[rank] === 1) {
+      lengthSoFar++;
+      if (lengthSoFar === lengthOfDraw) {
+        return startingRank;
+      }
+    } else {
+      startingRank = rank;
+      lengthSoFar = 1;
     }
+    previousRank = rank;
+  }
+  // if there's an ace & we're one card away from a straight & the last rank we looked at was a 2, it's a straight
+  if (
+    uniqueRanksInOrder.has('A') &&
+    lengthOfDraw - 1 === lengthSoFar &&
+    previousRank === '2'
+  ) {
+    return startingRank;
   }
 }
 
@@ -46,7 +69,7 @@ export function myPokerHand(handCards, boardCards) {
     if (count >= 5) {
       const cardsOfSuit = allCards.filter((card) => card.suit === suit);
       flushRanks = cardsOfSuit.map((card) => card.rank).slice(0, 5);
-      straightFlushTopRank = checkStraightOrDrawOfLength(cardsOfSuit, 5);
+      straightFlushTopRank = checkStraight(cardsOfSuit);
     }
   });
 
@@ -94,7 +117,7 @@ export function myPokerHand(handCards, boardCards) {
   }
 
   // Check straight
-  const topRankInStraight = checkStraightOrDrawOfLength(allCards, 5);
+  const topRankInStraight = checkStraight(allCards);
   if (topRankInStraight) {
     return {
       hand: HANDS.STRAIGHT,
