@@ -39,6 +39,12 @@ describe('checkStraightOrDrawOfLength', () => {
     expect(topRankInStraight).toBe(undefined);
   });
 
+  test('returns undefined with 2 and A but no straight', () => {
+    const cards = cardStringToObj('4C?AD?3C?JH?7S?2S?');
+    const topRankInStraight = checkStraightOrDrawOfLength(cards, 5);
+    expect(topRankInStraight).toBe(undefined);
+  });
+
   //TODO: test draws??
 });
 

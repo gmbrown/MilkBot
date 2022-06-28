@@ -2,10 +2,7 @@ import { ALL_CARD_STRINGS, RANK_TO_NUMRANK, RANKED_HANDS } from './constants';
 import { cardStringToObj } from './util';
 import { myPokerHand } from './handUtils';
 
-function compareHands(hand1, hand2, board) {
-  var hand1Results = myPokerHand(hand1, board);
-  var hand2Results = myPokerHand(hand2, board);
-
+function compareHands(hand1Results, hand2Results) {
   var diff = RANKED_HANDS[hand1Results.hand] - RANKED_HANDS[hand2Results.hand];
 
   if (diff > 0) {
@@ -91,12 +88,14 @@ function winAgainstPercentFullBoard(hand, board, exceptCards) {
   const allOtherCards = ALL_CARD_STRINGS.filter(
     (card) => !exceptCards.has(card)
   );
+  const myHandResults = myPokerHand(hand, board);
   for (let i = 0; i < allOtherCards.length; i++) {
     for (let j = i + 1; j < allOtherCards.length; j++) {
       const otherHand = cardStringToObj(
         `${allOtherCards[i]}?${allOtherCards[j]}?`
       );
-      const result = compareHands(hand, otherHand, board);
+      const otherHandResults = myPokerHand(otherHand, board);
+      const result = compareHands(myHandResults, otherHandResults);
       if (result === 'win') {
         wins++;
       } else if (result === 'lose') {
