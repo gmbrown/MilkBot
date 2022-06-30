@@ -247,17 +247,24 @@ function postflop(handString, boardString) {
   console.log(
     `Chances of winning against a random hand: ${winAgainstPercent}.`
   );
+  // TODO let's add some light memoization to remember just the last winAgainstPercent for same hand & board cards
+  const totalPotSize = game.action_widget.pot_size;
   if (winAgainstPercent > 0.9) {
     const betSizeIfAllIn =
       game.action_widget.bet_in_front + game.action_widget.stack_size;
-    return makeBetOfSize(betSizeIfAllIn, Math.random() * betSizeIfAllIn);
-  } else if (winAgainstPercent > 0.5) {
-    const scaledWinAgainstPercent = (winAgainstPercent - 0.5) / (0.9 - 0.5);
-    const totalPotSize = game.action_widget.pot_size;
+    // 1/3 of the time, if it's not the last round, we set raiseTo to 0 so that we check if possible
+    // TODO let's do this if there's 5 board cards AND we're last to act
+    const shouldCheck = Math.random() * 3 > 2 && boardCards.length < 5;
+    const raiseTo = shouldCheck ? 0 : Math.random() * betSizeIfAllIn;
+    return makeBetOfSize(betSizeIfAllIn, raiseTo);
+  } else if (winAgainstPercent > 0.65) {
+    const scaledWinAgainstPercent = (winAgainstPercent - 0.65) / (0.9 - 0.65);
     return makeBetOfSize(
-      totalPotSize * 2 * scaledWinAgainstPercent,
+      Math.max(3 * mb.BIG_BLIND, totalPotSize * 2 * scaledWinAgainstPercent),
       totalPotSize * scaledWinAgainstPercent
     );
+  } else if (winAgainstPercent > 0.5) {
+    return makeBetOfSize(Math.max(3 * mb.BIG_BLIND, totalPotSize / 10), 0);
   }
   console.log('Checking or folding.');
   checkOrFold();

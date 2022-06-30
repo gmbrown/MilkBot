@@ -16,6 +16,7 @@ async function play() {
       await checkIfTurnAndPlay();
     }
   } finally {
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // small pause so we don't enter this loop back to back
     isPlayingNow = false;
   }
 }
