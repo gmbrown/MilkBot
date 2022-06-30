@@ -33,7 +33,7 @@ function compareHands(hand1Results, hand2Results) {
   return 'draw';
 }
 
-export function winAgainstPercent(hand, board) {
+export function calculateWinAgainstPercent(hand, board) {
   const exceptCards = new Set([
     ...hand.map((handCard) => handCard.cardString),
     ...board.map((boardCard) => boardCard.cardString),
