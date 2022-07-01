@@ -12,5 +12,12 @@ test('two seven', () => {
   const hand = cardStringToObj('2C?7S?');
   const board = cardStringToObj('3S?9C?KD?');
   const percent = calculateWinAgainstPercent(hand, board);
-  expect(percent).toBeCloseTo(0.17, 0.01);
+  expect(percent).toBeCloseTo(0.21, 2);
+});
+
+test('unbeatable board', () => {
+  const hand = cardStringToObj('7D?5C?');
+  const board = cardStringToObj('TS?QC?KH?JD?AD?');
+  const percent = calculateWinAgainstPercent(hand, board);
+  expect(percent).toBe(1);
 });

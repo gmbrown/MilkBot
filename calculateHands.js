@@ -105,5 +105,5 @@ function winAgainstPercentFullBoard(hand, board, exceptCards) {
       }
     }
   }
-  return wins / (wins + losses);
+  return (wins + draws) / (wins + draws + losses);
 }
