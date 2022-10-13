@@ -13,7 +13,7 @@ const preFlopHandsToBetMultipliers = {
   // hand_ranks: [call_to, raise_to]
   // call_to and raise_to are multipliers of the big blind
   AA: [mb.ALL, mb.ALL],
-  72: [mb.ALL, mb.ALL],
+  72: [0, mb.ALL],
   KK: [mb.ALL, mb.ALL],
   QQ: [mb.ALL, mb.ALL],
   JJ: [mb.ALL, mb.ALL],
@@ -215,15 +215,15 @@ function preflop(cardsString) {
         'Preflop cards are suited, and match one of the suited starting hands'
       );
       const [callToMult, raiseToMult] = suitedBetMultipliers;
-      makeBetUsingMultipliers(callToMult, raiseToMult);
+      preflopBettingRandomization(callToMult, raiseToMult);
       return;
     }
   }
 
   const betMultipliers = preFlopHandsToBetMultipliers[handRanksString];
   if (!betMultipliers) {
-    if (Math.random() > 0.95) {
-      // 5% of the time we will randomly limp in
+    if (Math.random() > 0.9) {
+      // 10% of the time we will randomly limp in
       console.log(
         "Even though this isn't a hand we usually play, randomly limping in if it's cheap."
       );
@@ -237,17 +237,53 @@ function preflop(cardsString) {
   }
 
   const [callToMult, raiseToMult] = betMultipliers;
-  makeBetUsingMultipliers(callToMult, raiseToMult);
+  preflopBettingRandomization(callToMult, raiseToMult);
 }
 
-function postflop(handString, boardString) {
+function preflopBettingRandomization(callToMult, raiseToMult) {
+  if (raiseToMult === mb.ALL) {
+    rand = Math.random();
+    if (rand < 0.2) {
+      makeBetUsingMultipliers(callToMult, 3);
+    } else if (rand < 0.4) {
+      makeBetUsingMultipliers(callToMult, 5);
+    } else if (rand < 0.6) {
+      makeBetUsingMultipliers(callToMult, 10);
+    } else {
+      makeBetUsingMultipliers(callToMult, mb.ALL);
+    }
+  } else {
+    makeBetUsingMultipliers(callToMult, raiseToMult);
+  }
+}
+
+function postflop(handString, boardString, playersInHand) {
   const holeCards = cardStringToObj(handString);
   const boardCards = cardStringToObj(boardString);
+
+  // TODO let's add some light memoization to remember just the last winAgainstPercent for same hand & board cards
   const winAgainstPercent = calculateWinAgainstPercent(holeCards, boardCards);
   console.log(
     `Chances of winning against a random hand: ${winAgainstPercent}.`
   );
-  // TODO let's add some light memoization to remember just the last winAgainstPercent for same hand & board cards
+  console.log(`Number of players in hand: ${playersInHand}.`);
+
+  // winAgainstPercent thresholds for betting are based on the number of players in the hand
+  const bigBetThreshold = 0.75;
+  const smallBetThreshold = 0.6;
+  if (playersInHand == 2) {
+    bigBetThreshold = 0.6;
+    smallBetThreshold = 0.4;
+  } else if ((playersInHand = 3)) {
+    bigBetThreshold = 0.65;
+    smallBetThreshold = 0.5;
+  }
+
+  const shouldBluffRandomly = Math.random() > 0.95;
+  console.log(
+    `Small bet threshold: ${smallBetThreshold}, Big bet threshold: ${bigBetThreshold}, random bluff: ${shouldBluffRandomly}`
+  );
+
   const totalPotSize = game.action_widget.pot_size;
   if (winAgainstPercent > 0.9) {
     const betSizeIfAllIn =
@@ -257,14 +293,17 @@ function postflop(handString, boardString) {
     const shouldCheck = Math.random() * 3 > 2 && boardCards.length < 5;
     const raiseTo = shouldCheck ? 0 : Math.random() * betSizeIfAllIn;
     return makeBetOfSize(betSizeIfAllIn, raiseTo);
-  } else if (winAgainstPercent > 0.65) {
+  } else if (winAgainstPercent > bigBetThreshold) {
     const scaledWinAgainstPercent = (winAgainstPercent - 0.65) / (0.9 - 0.65);
     return makeBetOfSize(
       Math.max(3 * mb.BIG_BLIND, totalPotSize * 2 * scaledWinAgainstPercent),
       totalPotSize * scaledWinAgainstPercent
     );
-  } else if (winAgainstPercent > 0.5) {
+  } else if (winAgainstPercent > smallBetThreshold) {
     return makeBetOfSize(Math.max(3 * mb.BIG_BLIND, totalPotSize / 10), 0);
+  } else if (shouldBluffRandomly) {
+    console.log("I'm just bluffing!");
+    return makeBetUsingMultipliers(0, mb.ALL);
   }
   console.log('Checking or folding.');
   checkOrFold();
