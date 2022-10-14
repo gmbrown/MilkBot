@@ -269,8 +269,8 @@ function postflop(handString, boardString, playersInHand) {
   console.log(`Number of players in hand: ${playersInHand}.`);
 
   // winAgainstPercent thresholds for betting are based on the number of players in the hand
-  const bigBetThreshold = 0.75;
-  const smallBetThreshold = 0.6;
+  bigBetThreshold = 0.75;
+  smallBetThreshold = 0.6;
   if (playersInHand == 2) {
     bigBetThreshold = 0.6;
     smallBetThreshold = 0.4;
