@@ -336,8 +336,7 @@ export async function handlePotDistribution(potData) {
     potData.winners[seat] &&
     Object.keys(potData.winners).length === 1
   ) {
-    // TODO will taunt before animations finish. eventually, add a delay or wait for some event
-    // indicating animations are done
+    // Waiting 3s so we don't taunt before animations finish.
     console.log('Will taunt in 3 seconds because I knocked someone out!');
     setTimeout(() => {
       console.log('Taunting because I knocked someone out!');
