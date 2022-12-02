@@ -269,14 +269,14 @@ function postflop(handString, boardString, playersInHand) {
   console.log(`Number of players in hand: ${playersInHand}.`);
 
   // winAgainstPercent thresholds for betting are based on the number of players in the hand
-  bigBetThreshold = 0.75;
-  smallBetThreshold = 0.6;
+  bigBetThreshold = 0.8;
+  smallBetThreshold = 0.65;
   if (playersInHand == 2) {
-    bigBetThreshold = 0.6;
-    smallBetThreshold = 0.4;
-  } else if ((playersInHand = 3)) {
     bigBetThreshold = 0.65;
     smallBetThreshold = 0.5;
+  } else if ((playersInHand = 3)) {
+    bigBetThreshold = 0.7;
+    smallBetThreshold = 0.55;
   }
 
   const shouldBluffRandomly = Math.random() > 0.95;
@@ -329,7 +329,7 @@ export function handleShowdown() {
   }
 }
 
-export function handlePotDistribution(potData) {
+export async function handlePotDistribution(potData) {
   const seat = game.client_perspective;
   if (
     tauntOpportunity &&
@@ -338,12 +338,15 @@ export function handlePotDistribution(potData) {
   ) {
     // TODO will taunt before animations finish. eventually, add a delay or wait for some event
     // indicating animations are done
-    console.log('Taunting because I knocked someone out!');
-    socket.emit('taunt', {
-      taunt: 16,
-      id: game.table_id,
-      group_id: game.group_id,
-    });
+    console.log('Will taunt in 3 seconds because I knocked someone out!');
+    setTimeout(() => {
+      console.log('Taunting because I knocked someone out!');
+      socket.emit('taunt', {
+        taunt: 16,
+        id: game.table_id,
+        group_id: game.group_id,
+      });
+    }, 3000);
   }
   tauntOpportunity = false;
 }
