@@ -162,7 +162,15 @@ function makeBetOfSize(callToLimit, raiseToLimit) {
   // If we get here, either raising wasn't an option in the game or the min bet was too high for us.
   if (game.action_widget.all_in && betSizeIfAllIn <= raiseToLimit) {
     console.log("Can't/won't raise; going all in instead.");
-    game.action_widget.all_in.execute();
+    if (callToMult === mb.ALL) {
+      console.log('Taunting -Im in danger- before calling all in');
+      socket.emit('taunt', {
+        taunt: 3,
+        id: game.table_id,
+        group_id: game.group_id,
+      });
+    }
+    setTimeout(game.action_widget.all_in.execute, 2000);
   } else if (game.action_widget.call_button && betSizeIfCall <= callToLimit) {
     console.log("Can't/won't raise; calling instead.");
     checkOrCall();
@@ -329,7 +337,7 @@ export function handleShowdown() {
   }
 }
 
-export async function handlePotDistribution(potData) {
+export function handlePotDistribution(potData) {
   const seat = game.client_perspective;
   if (
     tauntOpportunity &&
